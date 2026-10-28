@@ -50,6 +50,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
     private TitleThemesService _titles = null!;
     private CostService _cost = null!;
     private Traffic.TrafficService _traffic = null!;
+    private Quota.CodexQuotaService _codexQuota = null!;
     private TaskbarState? _lastTaskbarState;
     private SpeedHub _hub = null!;
     private HistoryHub _historyHub = null!;
@@ -83,6 +84,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
     private bool _updateDoneShown;
     private DispatcherTimer? _dashboardTimer;
     private CodexFollowExitMonitor? _codexFollow;
+    private CodexForegroundMonitor? _codexForeground;
     private bool _dashboardDirty;
     private bool _tooltipShown;
     private long _lastSettingsLiveUpdate;
@@ -124,6 +126,14 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         _dashboardModel.Cost = _cost.Display;
         _traffic = new Traffic.TrafficService(_ui, _settings) { Helper = new Traffic.WindowsTrafficHelperHost() };
         _traffic.Hub.SnapshotChanged += (_, _) => OnTrafficChanged();
+        _codexQuota = new Quota.CodexQuotaService(() => _ui.BeginInvoke(() =>
+        {
+            if (_quitting) return;
+            UpdateTaskbar();
+            if (_tooltipShown)
+                _tooltip?.SetText(LiveLine(), LiveMoney() is { } quotaMoney ? quotaMoney.HoverLine : DisplayText.TodaySummary(_speed.Snapshot, _loc));
+        }));
+        _radar = new Radar.RadarService(_ui, Settings.NetworkEnabled);
         phases.Mark("settings+strings");
 
         _theme = new ThemeService(_ui, Settings.Appearance, _launch.ReduceMotion);
@@ -200,6 +210,14 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
             }
         }
         _orbs = new OrbManager(_ui, _orbClock, _settings, _theme, _speed, _loc, this) { Titles = _titles, Cost = _cost.Display };
+        _codexForeground = new CodexForegroundMonitor(_ui, visible =>
+        {
+            _orbs.SetForegroundVisible(visible);
+            if (Settings.OrbOnlyWhenCodexForeground)
+                AppLog.Info("Codex foreground orbs: " + (visible ? "shown" : "hidden") + ".");
+            UpdateTrafficDemand();
+        });
+        _codexForeground.SetEnabled(Settings.OrbOnlyWhenCodexForeground);
         _orbs.Apply();
         _titles.Changed += (_, _) => OnTitlesChanged();
         phases.Mark("orb");
@@ -222,6 +240,8 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
             StartUpdates();
             _cost.Start();
             _traffic.Start();
+            _radar.Start();
+            ConfigureCodexQuota();
             StartReporting();
             if (_launch.DemoSpeedValues is { Count: > 0 } speeds)
             {
@@ -280,6 +300,12 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
                     if (target == "dashboard")
                     {
                         return _dashboard is { IsShown: true } shown ? shown.Content as FrameworkElement : null;
+                    }
+
+                    if (target == "radar")
+                    {
+                        ShowRadar();
+                        return _radarWindow?.Content as FrameworkElement;
                     }
 
                     if (ReportCaptureTarget(target) is { } reportTarget)
@@ -468,6 +494,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
 
         _disposed = true;
         Try(() => _codexFollow?.Dispose());
+        Try(() => _codexForeground?.Dispose());
         Try(() => _historyStartFallback?.Stop());
         Try(() => _history?.Dispose());
         Try(() => _historyService?.Dispose());
@@ -476,6 +503,9 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         Try(() => _consentDialog?.CloseFromController());
         Try(() => _previewWindow?.Close());
         Try(() => _traffic?.Dispose());
+        Try(() => _codexQuota?.Dispose());
+        Try(() => _radar?.Dispose());
+        Try(() => _radarWindow?.Close());
         Try(() => _cost.Dispose());
         Try(() => _settings.Flush());
         Try(() => _preview.Stop());
@@ -712,6 +742,8 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         var bar = money is null ? ((string?)null, _loc["unit.tokS"]) : CostDisplay.BarValue(money, s.BarShowUnit);
         var accessible = money is null ? DisplayText.Accessibility(_speed.Value, title, _loc) : _cost.Display.LiveAccessibility(money, title);
         var secondary = BarSecondaryValue();
+        var quota = BarQuotaValue();
+        if (quota is not null) accessible = $"{accessible}{SpokenSeparator}{quota.Spoken}";
         if (secondary is not null)
         {
             accessible = $"{accessible}{SpokenSeparator}{secondary.Spoken}";
@@ -739,7 +771,8 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
             bar.Item1,
             money?.Unknown ?? false,
             secondary,
-            traffic);
+            traffic,
+            quota);
         _taskbar.Update(_lastTaskbarState);
     }
 
@@ -748,6 +781,17 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
     {
         var s = Settings;
         return s.BarSecondary && s.Cost.LiveUnit == LiveUnit.Tokens ? BarSecondary.From(s, _speed.Snapshot, _cost.Display) : null;
+    }
+
+    private void ConfigureCodexQuota() => _codexQuota.SetEnabled(
+        Settings.BarCodexQuota && Settings.ShowOnTaskbar && Settings.BarMode != BarDisplayMode.GlyphOnly && Settings.NetworkEnabled);
+
+    private BarQuotaBlock? BarQuotaValue()
+    {
+        if (!Settings.BarCodexQuota || Settings.BarMode == BarDisplayMode.GlyphOnly) return null;
+        var quota = _codexQuota.Snapshot;
+        return new(_loc["win.quota.fiveHour"], _loc["win.quota.week"],
+            Quota.CodexQuotaSnapshot.Percent(quota.FiveHourRemaining), Quota.CodexQuotaSnapshot.Percent(quota.WeekRemaining));
     }
 
     /// <summary>Joins spoken parts: <c>、</c> in Japanese, <c>, </c> in English, <c>，</c> in Chinese.</summary>
@@ -770,6 +814,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
             ? $"{money.NumberText} {money.Unit}"
             : $"{SpeedFormat.Speed(_speed.Value)} {_loc["unit.tokS"]}";
         var line = BarSecondaryValue() is { } secondary ? $"{main} · {secondary.Spoken} · {title}" : $"{main} · {title}";
+        if (BarQuotaValue() is { } quota) line += $" · {quota.Spoken}";
         return BarTrafficBlock.From(Settings, _traffic.Snapshot, _loc)?.Spoken is { } traffic ? $"{line} · {traffic}" : line;
     }
 
@@ -896,6 +941,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
             _dashboard.TrafficHistoryRequested += (_, source) => ShowHistory(source, traffic: true);
             _dashboard.TrafficSettingsRequested += (_, _) => OpenSettings("traffic");
             AttachReporting(_dashboard);
+            _dashboard.AttachRadar(_radar, ShowRadar);
             _dashboard.IsVisibleChanged += (_, _) =>
             {
                 if (_dashboard?.IsVisible != true)
@@ -1040,6 +1086,10 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         _updates.OnSettingsChanged(previous, current);
         _cost.OnSettingsChanged(previous, current);
         _traffic.OnSettingsChanged(previous, current);
+        ConfigureCodexQuota();
+        if (previous.OrbOnlyWhenCodexForeground != current.OrbOnlyWhenCodexForeground)
+            _codexForeground?.SetEnabled(current.OrbOnlyWhenCodexForeground);
+        if (previous.NetworkEnabled != current.NetworkEnabled) _radar.SetNetworkEnabled(current.NetworkEnabled);
         if (previous.Traffic.IncludeTools != current.Traffic.IncludeTools || previous.EnabledSourceSet() != current.EnabledSourceSet())
         {
             _history?.OnTrafficSettingsChanged();
@@ -1153,6 +1203,10 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         {
             ShowDashboard(CursorAnchor());
         }
+        else if (op == "radar")
+        {
+            ShowRadar();
+        }
         else if (op == "report-enable")
         {
             _report?.SetEnabled(true);
@@ -1233,6 +1287,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         _dashboard?.ApplyBackground();
         _dashboard?.ReportInvitation.SetAppearance(_theme.IsDark, _theme.HighContrast, _theme.ReduceMotion);
         _history?.OnThemeChanged();
+        _radarWindow?.Relocalize();
         if (_settingsModel is not null)
         {
             _settingsModel.ReduceMotion = _theme.ReduceMotion;
@@ -1257,6 +1312,8 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         RefreshReportSurfaces();
         _orbs?.Relocalize(_loc);
         _updateWindowModel?.Relocalize(_loc);
+        _radarWindow?.Relocalize();
+        _dashboard?.RelocalizeRadar();
         _history?.OnLanguageChanged();
         _dashboard?.SetUpdate(UpdatePillText());
         ConfigureOrb();

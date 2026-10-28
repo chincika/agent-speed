@@ -14,7 +14,7 @@
 
 ## 安装
 
-> 本 fork 的 Codex 联动目前仅在 Windows 源码中提供。下面的上游安装命令安装的是原版，不包含本 fork 的改动；请自行构建本仓库，或使用本 fork 后续发布的安装包。Windows 版的更新检查指向本 fork；尚未发布安装包前不会提供更新。
+> Windows 安装程序和更新检查使用本 fork。下面的 macOS 安装命令使用上游项目；Codex 扩展功能仅适用于 Windows。
 
 **macOS 14 及以上**（Apple Silicon 与 Intel）——粘贴到「终端」：
 
@@ -25,7 +25,7 @@ curl -fsSL https://raw.githubusercontent.com/zoefix/agent-speed/main/install.sh 
 **Windows 10 / 11**（x64 与 ARM64）——粘贴到 PowerShell：
 
 ```powershell
-irm https://raw.githubusercontent.com/zoefix/agent-speed/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/chincika/agent-speed/main/install.ps1 | iex
 ```
 
 就这样。安装程序会从 GitHub 下载最新版本、验证 SHA-256 校验码、安装并启动。之后重新运行同一行命令即可更新。
@@ -38,7 +38,7 @@ curl -fsSL https://raw.githubusercontent.com/zoefix/agent-speed/main/install.sh 
 ```
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/zoefix/agent-speed/main/install.ps1))) -Uninstall
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/chincika/agent-speed/main/install.ps1))) -Uninstall
 ```
 
 加上 `--purge` / `-Purge` 会同时删除设置。Windows 也可以在「设置 → 应用」中卸载。
@@ -103,7 +103,9 @@ Claude Desktop 普通聊天对话不会保存在本机，因此无法统计；Wo
 
 ## 隐私
 
-只读、只在本机运行，没有遥测、无需账号。Agent Speed 只会自动发出三种网络请求，而且都不会发送任何关于你的数据：向 GitHub Releases 检查更新、每天从本项目下载公开的模型价格表（GitHub，以 jsDelivr 为备用），以及仅在你选择以美元以外的货币显示费用时，每天下载公开汇率（open.er-api.com，以 fawazahmed0 currency API 和 Frankfurter 为备用）。每位用户下载的都是同一份文件，因此服务器无从得知你的货币、模型或用量。设置里的一个开关即可关闭所有网络连接，此时费用改用应用内置的价格表和汇率。Agent Speed 从不保存或显示对话内容，只使用 token 数量、模型名称和项目文件夹名称。用量历史只保存每日汇总（含每日的 API 等值费用），存放在你电脑上的一个小型数据库（`~/Library/Application Support/AgentSpeed`、`%LOCALAPPDATA%\AgentSpeed`），可在设置中清除。更新在安装前会用该版本发布的 SHA-256 校验和验证；校验和与版本一同发布，因此能拦截损坏或被篡改的下载文件，但无法防范仓库本身被入侵。价格表是按严格规则校验的纯数据，没有数字签名。
+Windows 版新增**模型跑分与推荐**：任务栏面板底部显示攻坚难题、日常开发、简单任务三档推荐，点击打开完整评分矩阵。仅读取 Codex 雷达公开 JSON，每三小时检查一次；无变化或读取失败时保留原数据。推荐按评分、费用和耗时在本机计算，完整窗口可查看规则，联网总开关也控制该功能。[推荐规则和数据来源](docs/MODEL-RADAR.md)。
+
+只读、只在本机运行，没有遥测、无需账号。Agent Speed 的自动网络请求都不会发送任何关于你的数据（Windows 版还会每三小时下载 Codex 雷达的公开跑分 JSON）：向 GitHub Releases 检查更新、每天从本项目下载公开的模型价格表（GitHub，以 jsDelivr 为备用），以及仅在你选择以美元以外的货币显示费用时，每天下载公开汇率（open.er-api.com，以 fawazahmed0 currency API 和 Frankfurter 为备用）。每位用户下载的都是同一份文件，因此服务器无从得知你的货币、模型或用量。设置里的一个开关即可关闭所有网络连接，此时费用改用应用内置的价格表和汇率。Agent Speed 从不保存或显示对话内容，只使用 token 数量、模型名称和项目文件夹名称。用量历史只保存每日汇总（含每日的 API 等值费用），存放在你电脑上的一个小型数据库（`~/Library/Application Support/AgentSpeed`、`%LOCALAPPDATA%\AgentSpeed`），可在设置中清除。更新在安装前会用该版本发布的 SHA-256 校验和验证；校验和与版本一同发布，因此能拦截损坏或被篡改的下载文件，但无法防范仓库本身被入侵。价格表是按严格规则校验的纯数据，没有数字签名。
 
 网络流量：Agent Speed 只在本机计算各程序收发的字节数，从不读取内容、网址或连接对象；只有在你开启实时上报（见下文）时，才会把 agent 的字节数发送给你选择的服务。在 Windows 上，要显示各 agent 的流量需要安装可选的辅助服务；它以权限受限的“本地服务”账户运行，只统计每个程序的字节数，安装和卸载各需要一次管理员确认（[详细说明](spec/WINDOWS-SERVICE.md)）。
 

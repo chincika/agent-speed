@@ -23,7 +23,7 @@ curl -fsSL https://raw.githubusercontent.com/zoefix/agent-speed/main/install.sh 
 **Windows 10 / 11**（x64・ARM64）——PowerShell に貼り付け：
 
 ```powershell
-irm https://raw.githubusercontent.com/zoefix/agent-speed/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/chincika/agent-speed/main/install.ps1 | iex
 ```
 
 これだけです。インストーラーが GitHub から最新版をダウンロードし、SHA-256 チェックサムを検証してインストール・起動します。同じコマンドを再実行すると更新できます。
@@ -36,7 +36,7 @@ curl -fsSL https://raw.githubusercontent.com/zoefix/agent-speed/main/install.sh 
 ```
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/zoefix/agent-speed/main/install.ps1))) -Uninstall
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/chincika/agent-speed/main/install.ps1))) -Uninstall
 ```
 
 `--purge` / `-Purge` を付けると設定も削除します。Windows では「設定 → アプリ」からも削除できます。
@@ -99,7 +99,7 @@ Claude Desktop の通常のチャット会話はローカルに保存されな�
 
 ## プライバシー
 
-読み取り専用・ローカルのみで動作し、テレメトリもアカウントもありません。Agent Speed が自動で行うネットワーク通信は次の 3 種類だけで、どれもあなたに関する情報を送りません：GitHub Releases でのアップデート確認、このリポジトリで公開しているモデル価格表の 1 日 1 回のダウンロード（GitHub、予備に jsDelivr）、そして米ドル以外の通貨で費用を表示するときだけ行う公開為替レートの 1 日 1 回のダウンロード（open.er-api.com、予備に fawazahmed0 currency API と Frankfurter）。全員が同じファイルを取得するため、サーバーがあなたの通貨・モデル・使用量を知ることはありません。設定のスイッチ 1 つですべての通信をオフにでき、その場合はアプリ内蔵の価格表とレートで費用を計算します。Agent Speed は会話の内容を保存・表示せず、使うのはトークン数・モデル名・プロジェクトフォルダー名だけです。使用履歴は日別の集計（各日の API 換算費用を含む）だけを、お使いのコンピューター上の小さなデータベース（`~/Library/Application Support/AgentSpeed`、`%LOCALAPPDATA%\AgentSpeed`）に保存し、設定から消去できます。アップデートはインストール前にリリースの SHA-256 チェックサムで検証します。チェックサムはリリースと一緒に公開されるため、破損や改ざんされたダウンロードは検出できますが、リポジトリ自体の侵害は防げません。価格表は厳格なルールで検証される単なるデータで、署名はされていません。
+読み取り専用・ローカルのみで動作し、テレメトリもアカウントもありません。Agent Speed の自動ネットワーク通信はどれもあなたに関する情報を送りません（Windows 版では Codex Radar の公開スコア JSON も3時間ごとに取得します）：GitHub Releases でのアップデート確認、このリポジトリで公開しているモデル価格表の 1 日 1 回のダウンロード（GitHub、予備に jsDelivr）、そして米ドル以外の通貨で費用を表示するときだけ行う公開為替レートの 1 日 1 回のダウンロード（open.er-api.com、予備に fawazahmed0 currency API と Frankfurter）。全員が同じファイルを取得するため、サーバーがあなたの通貨・モデル・使用量を知ることはありません。設定のスイッチ 1 つですべての通信をオフにでき、その場合はアプリ内蔵の価格表とレートで費用を計算します。Agent Speed は会話の内容を保存・表示せず、使うのはトークン数・モデル名・プロジェクトフォルダー名だけです。使用履歴は日別の集計（各日の API 換算費用を含む）だけを、お使いのコンピューター上の小さなデータベース（`~/Library/Application Support/AgentSpeed`、`%LOCALAPPDATA%\AgentSpeed`）に保存し、設定から消去できます。アップデートはインストール前にリリースの SHA-256 チェックサムで検証します。チェックサムはリリースと一緒に公開されるため、破損や改ざんされたダウンロードは検出できますが、リポジトリ自体の侵害は防げません。価格表は厳格なルールで検証される単なるデータで、署名はされていません。
 
 通信量：Agent Speed はこのコンピューター上で、プログラムが送受信したバイト数だけを数えます。内容・アドレス・接続先は一切読みません。このうち agent のバイト数を送信するのは、オンにしたライブ送信（下記）だけで、送信先は選んだサービスです。Windows で agent ごとの通信量を表示するには、任意のヘルパーサービスが必要です。権限の少ない「ローカル サービス」アカウントで動作し、プロセスごとのバイト数だけを数えます。インストールと削除のときに、それぞれ一度だけ管理者の承認が必要です（[詳細](spec/WINDOWS-SERVICE.md)）。
 

@@ -1,4 +1,250 @@
 {
+  "win.quota.show": {
+    "zh-Hant": "顯示 Codex 剩餘額度",
+    "zh-Hans": "显示 Codex 剩余额度",
+    "en": "Show remaining Codex quota",
+    "ja": "Codex の残り利用枠を表示"
+  },
+  "win.quota.hint": {
+    "zh-Hant": "在任務列數值旁分兩行顯示 5 小時與週額度的剩餘百分比，每 3 分鐘透過本機 Codex 更新。關閉後停止查詢；未登入或讀取失敗時顯示 —。僅圖示模式不顯示。",
+    "zh-Hans": "在任务栏数值旁分两行显示 5 小时与周额度的剩余百分比，每 3 分钟通过本机 Codex 更新。关闭后停止查询；未登录或读取失败时显示 —。仅图标模式不显示。",
+    "en": "Show remaining 5-hour and weekly quota in two lines beside the taskbar value. Refresh through local Codex every 3 minutes; switching off stops reads. Unavailable values show —. Hidden in icon-only mode.",
+    "ja": "タスクバーの数値の横に5時間・週間の残り割合を2行で表示。本機の Codex から3分ごとに更新し、無効時は取得を停止します。未ログインや取得失敗時は — を表示。アイコンのみのモードでは非表示。"
+  },
+  "win.quota.fiveHour": {
+    "zh-Hant": "5 小時", "zh-Hans": "5 小时", "en": "5 hours", "ja": "5 時間"
+  },
+  "win.quota.week": {
+    "zh-Hant": "週額度", "zh-Hans": "周额度", "en": "Weekly", "ja": "週間枠"
+  },
+  "win.quota.networkHint": {
+    "zh-Hant": "任務列額度每 3 分鐘透過本機 Codex 查詢官方額度服務；關閉連網時停止查詢並顯示 —。",
+    "zh-Hans": "任务栏额度每 3 分钟通过本机 Codex 查询官方额度服务；关闭联网时停止查询并显示 —。",
+    "en": "Taskbar quota reads the official quota service through local Codex every 3 minutes; network access off stops reads and shows —.",
+    "ja": "利用枠は本機の Codex 経由で公式サービスから3分ごとに取得。通信を無効にすると取得を停止し — を表示します。"
+  },
+  "win.orb.codexForeground": {
+    "zh-Hant": "僅在 Codex 位於前景時顯示",
+    "zh-Hans": "仅在 Codex 位于前台时显示",
+    "en": "Show only when Codex is in the foreground",
+    "ja": "Codex が最前面のときのみ表示"
+  },
+  "win.orb.codexForeground.hint": {
+    "zh-Hant": "Codex 桌面視窗取得焦點時顯示懸浮窗；切換到其他程式、最小化或在背景執行任務時自動隱藏。返回 Codex 後恢復原位置。",
+    "zh-Hans": "Codex 桌面窗口获得焦点时显示悬浮窗；切换到其他程序、最小化或在后台执行任务时自动隐藏。返回 Codex 后恢复原位置。",
+    "en": "Show floating orbs while the Codex desktop has focus. Hide them when another app has focus, Codex is minimized, or tasks run in the background. Returning to Codex restores their positions.",
+    "ja": "Codex デスクトップにフォーカスがある間は表示。他のアプリへの切り替え、最小化、バックグラウンド実行時は非表示にし、Codex に戻ると元の位置に表示します。"
+  },
+  "win.radar.networkHint": {
+    "zh-Hant": "模型評分另每三小時下載一次；關閉連網後保留已儲存的評分。",
+    "zh-Hans": "模型评分另每三小时下载一次；关闭联网后保留已保存的评分。",
+    "en": "Model scores also download every three hours; saved scores remain available with network access off.",
+    "ja": "モデルスコアも3時間ごとに取得し、通信を無効にしても保存済みのスコアは利用できます。"
+  },
+  "win.radar.panelTitle": {
+    "zh-Hant": "模型跑分與推薦",
+    "zh-Hans": "模型跑分与推荐",
+    "en": "Model scores & picks",
+    "ja": "モデルスコアと推奨"
+  },
+  "win.radar.windowTitle": {
+    "zh-Hant": "模型跑分與推薦",
+    "zh-Hans": "模型跑分与推荐",
+    "en": "Model scores & recommendations",
+    "ja": "モデルスコアと推奨"
+  },
+  "win.radar.subtitle": {
+    "zh-Hant": "降智雷達實測資料 · 推薦由 Agent Speed 根據目前評分計算",
+    "zh-Hans": "降智雷达实测数据 · 推荐由 Agent Speed 根据当前评分计算",
+    "en": "Measured by Codex Radar · recommendations calculated by Agent Speed",
+    "ja": "Codex Radar の実測値 · Agent Speed が現在のスコアから推奨"
+  },
+  "win.radar.source": {
+    "zh-Hant": "資料來源 ↗",
+    "zh-Hans": "数据来源 ↗",
+    "en": "Source ↗",
+    "ja": "データ元 ↗"
+  },
+  "win.radar.sourceShort": {
+    "zh-Hant": "來源：Codex 雷達 · 降智雷達",
+    "zh-Hans": "来源：Codex 雷达 · 降智雷达",
+    "en": "Source: Codex Radar · intelligence benchmark",
+    "ja": "出典：Codex Radar · 知能ベンチマーク"
+  },
+  "win.radar.refresh": {
+    "zh-Hant": "立即檢查",
+    "zh-Hans": "立即检查",
+    "en": "Check now",
+    "ja": "今すぐ確認"
+  },
+  "win.radar.checking": {
+    "zh-Hant": "正在檢查最新評分…",
+    "zh-Hans": "正在检查最新评分…",
+    "en": "Checking the latest scores…",
+    "ja": "最新のスコアを確認中…"
+  },
+  "win.radar.offline": {
+    "zh-Hant": "連網已關閉 · 顯示已儲存資料",
+    "zh-Hans": "联网已关闭 · 显示已保存数据",
+    "en": "Network off · showing saved data",
+    "ja": "ネットワーク無効 · 保存済みデータを表示"
+  },
+  "win.radar.failed": {
+    "zh-Hant": "更新失敗 · 保留上次評分，三小時後重試",
+    "zh-Hans": "更新失败 · 保留上次评分，三小时后重试",
+    "en": "Update failed · keeping previous scores, retry in 3 hours",
+    "ja": "更新失敗 · 前回のスコアを保持し、3時間後に再試行"
+  },
+  "win.radar.every3h": {
+    "zh-Hant": "每三小時自動檢查 · 僅在資料變化時更新",
+    "zh-Hans": "每三小时自动检查 · 仅在数据变化时更新",
+    "en": "Checks every 3 hours · updates only when data changes",
+    "ja": "3時間ごとに確認 · データ変更時のみ更新"
+  },
+  "win.radar.waiting": {
+    "zh-Hant": "等待首次同步",
+    "zh-Hans": "等待首次同步",
+    "en": "Waiting for the first sync",
+    "ja": "初回同期を待機中"
+  },
+  "win.radar.checked": {
+    "zh-Hant": "上次檢查",
+    "zh-Hans": "上次检查",
+    "en": "Last checked",
+    "ja": "最終確認"
+  },
+  "win.radar.recommendationNote": {
+    "zh-Hant": "工具推薦 · 按本輪實測計算，適合作為選型參考",
+    "zh-Hans": "工具推荐 · 按本轮实测计算，适合作为选型参考",
+    "en": "Tool picks · based on this measured round, for model selection",
+    "ja": "ツールの推奨 · 今回の実測に基づくモデル選択の参考"
+  },
+  "win.radar.openScores": {
+    "zh-Hant": "查看完整評分",
+    "zh-Hans": "查看完整评分",
+    "en": "View all scores",
+    "ja": "全スコアを表示"
+  },
+  "win.radar.modelsEfforts": {
+    "zh-Hant": "{0} 個模型 · {1} 個檔位",
+    "zh-Hans": "{0} 个模型 · {1} 个档位",
+    "en": "{0} models · {1} configurations",
+    "ja": "{0} モデル · {1} 設定"
+  },
+  "win.radar.emptyPicks": {
+    "zh-Hant": "同步評分後自動產生三個檔位的推薦",
+    "zh-Hans": "同步评分后自动生成三个档位的推荐",
+    "en": "Three task tiers appear after scores sync",
+    "ja": "同期後に3種類のタスク向け推奨を表示"
+  },
+  "win.radar.recommendations": {
+    "zh-Hant": "任務推薦",
+    "zh-Hans": "任务推荐",
+    "en": "Task recommendations",
+    "ja": "タスク別の推奨"
+  },
+  "win.radar.scores": {
+    "zh-Hant": "降智雷達 · 完整評分",
+    "zh-Hans": "降智雷达 · 完整评分",
+    "en": "Intelligence radar · all scores",
+    "ja": "知能レーダー · 全スコア"
+  },
+  "win.radar.scoreNote": {
+    "zh-Hant": "總分按站點四項權重計算；格內依序為總分、美元等值費用、總耗時（分鐘）。顏色越亮，得分越高；— 表示未測試。",
+    "zh-Hans": "总分按站点四项权重计算；格内依次为总分、美元等值费用、总耗时（分钟）。颜色越亮，得分越高；— 表示未测试。",
+    "en": "Total uses the site's four task weights. Cells show score, USD-equivalent cost and total minutes. Brighter cells score higher; — means untested.",
+    "ja": "サイトの4項目の重みで合計を計算。セルはスコア、米ドル相当費用、合計時間（分）。明るい色ほど高得点。— は未測定。"
+  },
+  "win.radar.emptyScores": {
+    "zh-Hant": "暫無評分資料。連網後點擊「立即檢查」；讀取失敗時會保留上次成功的資料。",
+    "zh-Hans": "暂无评分数据。联网后点击“立即检查”；读取失败时会保留上次成功的数据。",
+    "en": "No scores yet. Enable network access and choose Check now. Failed requests keep the last good data.",
+    "ja": "データがありません。ネットワークを有効にして「今すぐ確認」を選択。失敗時は前回のデータを保持。"
+  },
+  "win.radar.usdNote": {
+    "zh-Hant": "費用為本輪測試的 API 美元等值估算",
+    "zh-Hans": "费用为本轮测试的 API 美元等值估算",
+    "en": "Costs are estimated API-equivalent USD for this round",
+    "ja": "費用は今回の測定の API 米ドル相当推定額"
+  },
+  "win.radar.sourceUpdated": {
+    "zh-Hant": "來源資料時間",
+    "zh-Hans": "源数据时间",
+    "en": "Source timestamp",
+    "ja": "データ元の時刻"
+  },
+  "win.radar.selectHint": {
+    "zh-Hant": "點擊評分格可查看四項分數；點擊任務推薦可定位對應模型檔位。",
+    "zh-Hans": "点击评分格可查看四项分数；点击任务推荐可定位对应模型档位。",
+    "en": "Select a cell for task scores; select a recommendation to locate its model and effort.",
+    "ja": "セルで項目別スコアを確認。推奨を選ぶと該当するモデル設定へ移動。"
+  },
+  "win.radar.modelEffort": {
+    "zh-Hant": "模型 / 檔位",
+    "zh-Hans": "模型 / 档位",
+    "en": "Model / effort",
+    "ja": "モデル / 推論設定"
+  },
+  "win.radar.notTested": {
+    "zh-Hant": "該模型檔位沒有本輪測試結果",
+    "zh-Hans": "该模型档位没有本轮测试结果",
+    "en": "No result for this model and effort in this round",
+    "ja": "今回のこのモデル設定の測定結果はありません"
+  },
+  "win.radar.breakdown": {
+    "zh-Hant": "秦始皇 / 龐貝 / 鵜鶘 / 糖果（各項百分制）：",
+    "zh-Hans": "秦始皇 / 庞贝 / 鹈鹕 / 糖果（各项百分制）：",
+    "en": "Qin / Pompeii / Pelican / Candy (each out of 100):",
+    "ja": "秦 / ポンペイ / ペリカン / キャンディ（各100点満点）："
+  },
+  "win.radar.hard": {
+    "zh-Hant": "攻堅難題",
+    "zh-Hans": "攻坚难题",
+    "en": "Hard problems",
+    "ja": "難問への挑戦"
+  },
+  "win.radar.daily": {
+    "zh-Hant": "日常開發",
+    "zh-Hans": "日常开发",
+    "en": "Daily development",
+    "ja": "日常の開発"
+  },
+  "win.radar.simple": {
+    "zh-Hant": "簡單任務",
+    "zh-Hans": "简单任务",
+    "en": "Simple tasks",
+    "ja": "簡単なタスク"
+  },
+  "win.radar.hardRule": {
+    "zh-Hant": "實測總分最高；同分優先費用更低、耗時更短。",
+    "zh-Hans": "实测总分最高；同分优先费用更低、耗时更短。",
+    "en": "Highest measured score; ties favor lower cost, then shorter time.",
+    "ja": "実測最高点。同点なら低費用、次に短時間を優先。"
+  },
+  "win.radar.dailyRule": {
+    "zh-Hant": "得分 ≥ 本輪最高分的 80%；綜合性能 50%、費用 30%、耗時 20%。",
+    "zh-Hans": "得分 ≥ 本轮最高分的 80%；综合性能 50%、费用 30%、耗时 20%。",
+    "en": "At least 80% of the best score; quality 50%, cost 30%, time 20%.",
+    "ja": "最高点の80%以上。性能50%、費用30%、時間20%。"
+  },
+  "win.radar.simpleRule": {
+    "zh-Hant": "得分 ≥ 本輪最高分的 65%；優先費用最低，同價優先得分。",
+    "zh-Hans": "得分 ≥ 本轮最高分的 65%；优先费用最低，同价优先得分。",
+    "en": "At least 65% of the best score; lowest cost, then highest score.",
+    "ja": "最高点の65%以上。最低費用を優先、同額なら高得点。"
+  },
+  "win.radar.rules": {
+    "zh-Hant": "推薦標準與計算方式",
+    "zh-Hans": "推荐标准与计算方式",
+    "en": "Recommendation rules & calculation",
+    "ja": "推奨基準と計算方法"
+  },
+  "win.radar.ruleDetail": {
+    "zh-Hant": "攻堅難題：本輪總分最高優先，同分按費用、耗時升序。\n日常開發：先篩選達到最高分 80% 且費用、耗時已知的檔位，取綜合指數最高者：\n指數 = (得分 / 最高分)^0.50 × ((最低費用 + 0.01) / (費用 + 0.01))^0.30 × ((最短耗時 + 1) / (耗時 + 1))^0.20。\n最低費用、最短耗時取自日常開發入圍檔位；單位為美元、秒。偏移用於處理實測零值。\n簡單任務：篩選達到最高分 65% 且費用已知的檔位，按費用最低、得分最高、耗時最短選擇。\n三檔可推薦同一模型。缺失指標不當作零；費用和耗時僅代表本輪測試。更新評分後重新計算。",
+    "zh-Hans": "攻坚难题：本轮总分最高优先，同分按费用、耗时升序。\n日常开发：先筛选得分达到本轮最高分 80% 且费用、耗时已知的档位，再取综合指数最高者：\n指数 = (得分 / 最高分)^0.50 × ((最低费用 + 0.01) / (费用 + 0.01))^0.30 × ((最短耗时 + 1) / (耗时 + 1))^0.20。\n最低费用、最短耗时在日常开发入围档位中计算；费用单位为美元，耗时单位为秒。微小偏移用于兼容实测零费用、零耗时。\n简单任务：先筛选得分达到本轮最高分 65% 且费用已知的档位，再按费用最低、得分最高、耗时最短选择。\n三个档位可推荐同一模型。缺失指标不会按零计算。性能指本轮基准得分；费用和耗时仅代表该轮测试。推荐会随评分更新重新计算。",
+    "en": "Hard: highest score, then lowest cost and shortest time.\nDaily: candidates need at least 80% of the best score and known cost and time. Maximize:\n(score / best)^0.50 × ((minCost + 0.01) / (cost + 0.01))^0.30 × ((minTime + 1) / (time + 1))^0.20.\nMinima are among eligible daily candidates; cost is USD and time is seconds. Small offsets handle measured zero values.\nSimple: at least 65% of the best score and known cost; lowest cost, then highest score, then shortest time.\nTiers can choose the same model. Missing values are not zero. Metrics describe this benchmark round, not every workload. Recomputed when scores change.",
+    "ja": "難問：最高点、低費用、短時間の順。\n日常開発：最高点の80%以上、費用と時間が既知の設定から次の指数が最大のものを選択：\n(点数 / 最高点)^0.50 × ((最低費用 + 0.01) / (費用 + 0.01))^0.30 × ((最短時間 + 1) / (時間 + 1))^0.20。\n最小値は候補内で算出。単位は米ドルと秒。微小値は測定値ゼロに対応するため。\n簡単なタスク：最高点の65%以上で費用が既知の設定から最低費用を選び、同額なら高得点、次に短時間。\n同じモデルが複数の区分に選ばれる場合があります。欠損値はゼロとみなしません。更新時に再計算。"
+  },
   "_comment": "Windows-only UI strings. Same format as spec/strings.json; every key needs zh-Hant, zh-Hans, en and ja.",
   "win.chart.peak": {
     "zh-Hant": "峰值 %@",

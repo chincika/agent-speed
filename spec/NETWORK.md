@@ -1,11 +1,12 @@
 # Agent Speed — Network Specification
 
-Agent Speed reads local logs and works fully offline. It makes exactly three kinds of automatic network requests, all
+Agent Speed reads local logs and works fully offline. Both platforms make three kinds of automatic public-data requests, all
 optional, all HTTPS `GET`, none of them carrying anything about the user: the update check (`spec/UPDATES.md`), the
 daily price-table sync (section 3) and the daily exchange rates (section 4). A fourth kind exists only when the user
 turns it on: live reporting (section 6, `spec/REPORTING.md`), the one feature that sends data about the user's
-activity, to a service the user chose. Both platforms implement exactly this behaviour; anything not listed here is
-never requested.
+activity, to a service the user chose. Windows additionally downloads the public model benchmark JSON every three
+hours (section 7); this sends no user activity. Windows can also read the signed-in Codex account's remaining quota
+through the installed Codex app-server (section 8). Anything not listed here is never requested.
 
 ## 1. Common rules
 
@@ -36,6 +37,8 @@ never requested.
 | Price table (3) | `raw.githubusercontent.com`, `cdn.jsdelivr.net` | 60 s after launch, then daily, manual | 1 MiB |
 | Exchange rates (4) | `open.er-api.com`, `cdn.jsdelivr.net`, `latest.currency-api.pages.dev`, `api.frankfurter.dev` | only while a non-USD currency is selected: 30 s after launch or on selection, then daily, manual | 256 KiB |
 | Live reporting (6) | the service URL and the API host the user confirmed | only while the user has it on: every 5 s while agents work, a heartbeat while idle, nothing when quiet | 64 KiB discovery, 16 KiB API |
+| Windows model radar (7) | `codexradar.com` | after launch if due, every 3 h, after resume if due, manual | 4 MiB |
+| Windows Codex taskbar quota (8) | Codex's own authenticated quota service via local app-server | immediately when enabled, then every 3 min | 30 s RPC deadline |
 
 ## 2. Update check
 
@@ -217,3 +220,32 @@ Avatar input stays local until upload: PNG/JPEG up to 10 MiB is re-encoded witho
 256×256 PNG up to 512 KiB. Profile JSON responses are bounded to 64 KiB; these separate limits do not raise
 the existing 16 KiB periodic report limit. Avatar URLs are website metadata; native clients download their
 own avatar through the signed API endpoint rather than following an arbitrary external image URL.
+
+## 7. Windows model radar
+
+Windows reads only `https://codexradar.com/data/codex-four-task-results.json` as a public JSON
+score API. Requests use the common bounded HTTPS transport, no cookies or credentials, the
+same user agent as other public downloads, and a 4 MiB body cap. No HTML scraping, account
+access, usage upload or stationmaster recommendation request is made.
+
+The app checks when due after launch, every three hours from the last persisted attempt,
+and after resume if due. The due check runs every minute. Manual checks run immediately.
+The network master switch cancels in-flight work and blocks automatic and manual checks.
+Unchanged data preserves the snapshot; failures retain the previous data and retry after
+three hours. Data and check metadata are atomically cached under `<app data>/radar/radar.json`.
+Corrupt caches and unsupported or incomplete feed rounds are ignored.
+
+Recommendations are calculated locally from measured scores, costs and durations using
+three task tiers. Full validation, scoring and recommendation rules: `docs/MODEL-RADAR.md`.
+
+## 8. Windows Codex taskbar quota
+
+`taskbar.codexQuota` (Settings → Taskbar), default on, reads `account/rateLimits/read` through the installed
+`codex app-server --stdio`. Codex handles authentication and its configured network/proxy transport; the
+public-download header rules in sections 2–4 do not apply. Agent Speed does not read or store authentication
+tokens, send conversation content, create threads or invoke a model. RPC responses and account IDs are never logged.
+
+An immediate read is followed by a read every three minutes. Turning off the feature, the taskbar widget or the
+network master switch, or choosing glyph-only mode cancels reads and terminates the owned child process.
+There is no quota work while disabled. Missing/failed values display a dash and retry on the next interval;
+the app never presents cached quota as a successful current read. Details: `docs/CODEX-TASKBAR-QUOTA.md`.

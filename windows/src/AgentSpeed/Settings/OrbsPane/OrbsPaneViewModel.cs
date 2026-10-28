@@ -352,6 +352,15 @@ internal sealed class OrbsPaneViewModel : ObservableObject
 
     public string AllNote => _loc.Format("orbs.allNote", _loc["settings.taskbar"]);
 
+    public bool OnlyWhenCodexForeground
+    {
+        get => S.OrbOnlyWhenCodexForeground;
+        set
+        {
+            if (!_syncing) _settings.Update(s => s with { OrbOnlyWhenCodexForeground = value });
+        }
+    }
+
     /// <summary>Master group <c>orbs.names</c>: 0 automatic, 1 always, 2 never (DESIGN 2b, Name plate).</summary>
     public int OrbNamesIndex
     {

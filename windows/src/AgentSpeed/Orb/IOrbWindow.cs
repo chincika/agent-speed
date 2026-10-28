@@ -157,6 +157,8 @@ internal interface IOrbWindow
 
     void Show();
 
+    void Hide();
+
     void Close();
 
     /// <summary>The orb as drawn now, premultiplied BGRA at the window's pixel size (developer capture), or null.</summary>

@@ -83,6 +83,29 @@ internal sealed class OrbManager : IDisposable
     private bool _platesDirty;
     private SourceAvailability? _availability;
     private TrafficSnapshot _traffic = TrafficSnapshot.Off;
+    private bool _foregroundVisible = true;
+
+    public void SetForegroundVisible(bool visible)
+    {
+        if (_disposed || visible == _foregroundVisible) return;
+        _foregroundVisible = visible;
+        if (visible)
+        {
+            foreach (var entry in _entries.Values) entry.Window.Show();
+            ResolvePlates();
+            if (PendingUndo is not null) ShowUndoChip();
+        }
+        else
+        {
+            foreach (var entry in _entries.Values) entry.Window.Hide();
+            _plates.Resolve([], Settings, Availability());
+            _chip?.Hide();
+            _undoChip?.Hide();
+            _chipTimer.Stop();
+            _hoverOrb = null;
+            ShowGuides([]);
+        }
+    }
 
     public OrbManager(Dispatcher ui, OrbClock clock, SettingsService settings, ThemeService theme, SpeedModel speed, Localizer loc, IOrbHost host)
     {
@@ -189,7 +212,7 @@ internal sealed class OrbManager : IDisposable
         var list = new List<(FrameworkElement, Rect, double)>();
         foreach (var entry in _entries.Values)
         {
-            if (entry.Window.Handle != 0 && User32.GetWindowRect(entry.Window.Handle, out var rect))
+            if (entry.Window.IsVisible && entry.Window.Handle != 0 && User32.GetWindowRect(entry.Window.Handle, out var rect))
             {
                 list.Add((new OrbSnapshotElement(entry.Window), new Rect(rect.Left, rect.Top, rect.Width, rect.Height), entry.Window.Opacity));
             }
@@ -280,7 +303,7 @@ internal sealed class OrbManager : IDisposable
         foreach (var id in created)
         {
             var window = _entries[id].Window;
-            if (!window.IsVisible)
+            if (_foregroundVisible && !window.IsVisible)
             {
                 window.Show();
             }
@@ -363,7 +386,7 @@ internal sealed class OrbManager : IDisposable
     /// Some visible orb shows its sources' traffic right now (until its readout has faded out): per-source sampling runs
     /// every second (METRICS 10.10).
     /// </summary>
-    public bool ShowsSourceTraffic => _entries.Values.Any(e => e.Definition.Traffic == OrbTraffic.Sources && e.Window.Surface.TrafficVisible);
+    public bool ShowsSourceTraffic => _foregroundVisible && _entries.Values.Any(e => e.Definition.Traffic == OrbTraffic.Sources && e.Window.Surface.TrafficVisible);
 
     /// <summary>Delivers an engine event to the orbs it belongs to (completions by source, all-sources new peak).</summary>
     public void OnEvent(SpeedEvent speedEvent)
@@ -930,6 +953,12 @@ internal sealed class OrbManager : IDisposable
             return;
         }
 
+        if (!_foregroundVisible)
+        {
+            _plates.Resolve([], Settings, Availability());
+            return;
+        }
+
         if (_entries.Values.Any(e => e.Window.IsDragging))
         {
             _platesDirty = true;
@@ -985,6 +1014,7 @@ internal sealed class OrbManager : IDisposable
 
     private void ShowGuides(IReadOnlyList<OrbGuide> guides)
     {
+        if (!_foregroundVisible) guides = [];
         var accent = AccentColor();
         var scale = Monitors.Primary()?.Scale ?? 1;
         for (var i = 0; i < guides.Count; i++)
@@ -1103,6 +1133,7 @@ internal sealed class OrbManager : IDisposable
 
     private void RefreshChip()
     {
+        if (!_foregroundVisible) { _chip?.Hide(); _chipTimer.Stop(); return; }
         if (_platesDirty)
         {
             ResolvePlates();
@@ -1195,6 +1226,7 @@ internal sealed class OrbManager : IDisposable
 
     private void ShowUndoChip()
     {
+        if (!_foregroundVisible) { _undoChip?.Hide(); return; }
         if (PendingUndo is not { } undo || !_entries.TryGetValue(undo.AnchorId, out var entry) || !entry.Window.HasCenter)
         {
             return;

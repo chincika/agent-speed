@@ -22,7 +22,8 @@ internal sealed record TaskbarState(
     string? ValueText = null,
     bool ValueMuted = false,
     BarSecondary? Secondary = null,
-    BarTrafficBlock? Traffic = null)
+    BarTrafficBlock? Traffic = null,
+    BarQuotaBlock? Quota = null)
 {
     public static TaskbarState Initial { get; } = new(
         false, 0, SpeedTier.Idle, HeatMath.DefaultRedline, BarDisplayMode.GlyphAndValue, true, true, true, false, false,
@@ -33,7 +34,9 @@ internal sealed record TaskbarState(
         Mode != other.Mode || ShowUnit != other.ShowUnit || UnitText != other.UnitText || Enabled != other.Enabled
         || (Secondary is null) != (other.Secondary is null) || Secondary?.Live.Unit != other.Secondary?.Live.Unit
         || Secondary?.Today.Unit != other.Secondary?.Today.Unit || Secondary?.Live.Label != other.Secondary?.Live.Label
-        || (Traffic is null) != (other.Traffic is null) || Traffic?.Bits != other.Traffic?.Bits;
+        || (Traffic is null) != (other.Traffic is null) || Traffic?.Bits != other.Traffic?.Bits
+        || (Quota is null) != (other.Quota is null) || Quota?.FiveHourLabel != other.Quota?.FiveHourLabel
+        || Quota?.WeekLabel != other.Quota?.WeekLabel;
 }
 
 internal enum TaskbarPresence

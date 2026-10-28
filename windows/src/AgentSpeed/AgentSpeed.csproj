@@ -33,6 +33,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="AgentSpeed.Windows.Tests" />
     <InternalsVisibleTo Include="AgentSpeed.ProfileHarness" />
+    <InternalsVisibleTo Include="AgentSpeed.RadarHarness" />
   </ItemGroup>
 
   <ItemGroup>

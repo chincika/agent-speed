@@ -552,6 +552,11 @@
                                    Visibility="{Binding TrafficCaption, Converter={StaticResource HasText}}" />
                     </StackPanel>
 
+                <StackPanel Margin="0,16,0,0">
+                    <Rectangle Style="{StaticResource Hairline}" Margin="0,0,0,10" />
+                    <StackPanel x:Name="RadarHost" />
+                </StackPanel>
+
                 <!-- Warnings: informational, never alarming -->
                 <Grid Margin="0,12,0,0" Visibility="{Binding HasWarning, Converter={StaticResource Visible}}">
                     <Grid.ColumnDefinitions>

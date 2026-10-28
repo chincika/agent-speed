@@ -340,6 +340,20 @@ internal sealed class GpuOrbWindow : IOrbWindow, IOrbHostInput
         _housekeeping.Start();
     }
 
+    public void Hide()
+    {
+        if (_closed) return;
+        _host.Hide();
+        _surface.Visible = false;
+        _housekeeping.Stop();
+        _passThroughPoll.Stop();
+        SetUnitHover(false);
+        _hoverGrace?.Stop();
+        _discHover = false;
+        _plateHover = false;
+        SetHover(false);
+    }
+
     public void Close()
     {
         if (_closed)

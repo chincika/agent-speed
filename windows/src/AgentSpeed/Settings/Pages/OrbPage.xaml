@@ -90,6 +90,13 @@
         <controls:SettingsCard Header="{loc:Loc settings.orb.show}" Icon="&#xEA3A;" Description="{Binding AllNote}">
             <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowOrbs, Mode=TwoWay}" AutomationProperties.Name="{loc:Loc settings.orb.show}" />
         </controls:SettingsCard>
+        <controls:SettingsCard Header="{loc:Loc win.orb.codexForeground}" Icon="&#xE7C4;"
+                               Description="{loc:Loc win.orb.codexForeground.hint}">
+            <CheckBox x:Name="CodexForegroundToggle" Style="{StaticResource ToggleSwitch}"
+                      IsChecked="{Binding OnlyWhenCodexForeground, Mode=TwoWay}"
+                      AutomationProperties.Name="{loc:Loc win.orb.codexForeground}"
+                      AutomationProperties.HelpText="{loc:Loc win.orb.codexForeground.hint}" />
+        </controls:SettingsCard>
         <controls:SettingsCard Header="{loc:Loc orbs.names}" Icon="&#xE8EC;" Description="{Binding OrbNamesHint}">
             <ComboBox MinWidth="200" SelectedIndex="{Binding OrbNamesIndex, Mode=TwoWay}" AutomationProperties.Name="{loc:Loc orbs.names}"
                       AutomationProperties.HelpText="{Binding OrbNamesHint}">

@@ -1,0 +1,1150 @@
+{
+  "schema": "codex-four-task-results/1",
+  "protocol": "codex-four-weighted-150-v2",
+  "round_id": "codex-four-261-20261028",
+  "score_snapshot_at": "2026-10-28T13:38:03.931822+08:00",
+  "expected": 184,
+  "graded": 184,
+  "configurations": 46,
+  "models": [
+    "gpt-6.1-sol",
+    "gpt-6-astra",
+    "gpt-6.1-terra",
+    "gpt-6-sol",
+    "gpt-6-luna",
+    "gpt-5.6-sol",
+    "gpt-5.6-terra",
+    "gpt-5.6-luna"
+  ],
+  "model_names": {
+    "gpt-6.1-sol": "GPT-6.1 Sol",
+    "gpt-6-astra": "GPT-6 Astra",
+    "gpt-6.1-terra": "GPT-6.1 Terra",
+    "gpt-6-sol": "GPT-6 Sol",
+    "gpt-6-luna": "GPT-6 Luna",
+    "gpt-5.6-sol": "GPT-5.6 Sol",
+    "gpt-5.6-terra": "GPT-5.6 Terra",
+    "gpt-5.6-luna": "GPT-5.6 Luna"
+  },
+  "efforts": [
+    "ultra",
+    "max",
+    "xhigh",
+    "high",
+    "medium",
+    "low"
+  ],
+  "task_weights": {
+    "combined": 60,
+    "pompeii": 45,
+    "pelican": 22.5,
+    "candy": 22.5
+  },
+  "score_max": 150,
+  "rows": [
+    {
+      "model": "gpt-6.1-sol",
+      "effort": "low",
+      "combined": {
+        "score": 59,
+        "cost_usd": 0.0770508,
+        "model_elapsed_seconds": 215.8885311856866
+      },
+      "pompeii": {
+        "score100": 78.57142857142857,
+        "cost_usd": 0.4348316,
+        "model_elapsed_seconds": 789.6186026111245
+      },
+      "pelican": {
+        "score": 76.5,
+        "cost_usd": 0.0584364,
+        "model_elapsed_seconds": 135.9296832177788
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0149408,
+        "model_elapsed_seconds": 72.82361616939306
+      }
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "combined": {
+        "score": 69,
+        "cost_usd": 0.3102476,
+        "model_elapsed_seconds": 567.526577340439
+      },
+      "pompeii": {
+        "score100": 64.0,
+        "cost_usd": 0.3421836,
+        "model_elapsed_seconds": 649.3367969952524
+      },
+      "pelican": {
+        "score": 84.5,
+        "cost_usd": 0.085732,
+        "model_elapsed_seconds": 142.0241416748613
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0175208,
+        "model_elapsed_seconds": 72.77423759177327
+      }
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "combined": {
+        "score": 69,
+        "cost_usd": 0.3713012,
+        "model_elapsed_seconds": 557.2735810168087
+      },
+      "pompeii": {
+        "score100": 92.85714285714286,
+        "cost_usd": 0.3505688,
+        "model_elapsed_seconds": 736.4455935917795
+      },
+      "pelican": {
+        "score": 82,
+        "cost_usd": 0.126764,
+        "model_elapsed_seconds": 233.79315040260553
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0306936,
+        "model_elapsed_seconds": 80.973748492077
+      }
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "effort": "xhigh",
+      "combined": {
+        "score": 95,
+        "cost_usd": 0.3479064,
+        "model_elapsed_seconds": 686.441506518051
+      },
+      "pompeii": {
+        "score100": 81.48148148148148,
+        "cost_usd": 0.4419952,
+        "model_elapsed_seconds": 885.9691312238574
+      },
+      "pelican": {
+        "score": 97,
+        "cost_usd": 0.4301524,
+        "model_elapsed_seconds": 801.3530496694148
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0346856,
+        "model_elapsed_seconds": 79.97403851337731
+      }
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "effort": "max",
+      "combined": {
+        "score": 69,
+        "cost_usd": 0.440068,
+        "model_elapsed_seconds": 984.8287584688514
+      },
+      "pompeii": {
+        "score100": 74.07407407407408,
+        "cost_usd": 0.6560552,
+        "model_elapsed_seconds": 1294.260373344645
+      },
+      "pelican": {
+        "score": 99,
+        "cost_usd": 0.5331096,
+        "model_elapsed_seconds": 1174.5796515513211
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0336428,
+        "model_elapsed_seconds": 103.1261782925576
+      }
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "effort": "ultra",
+      "combined": {
+        "score": 69,
+        "cost_usd": 0.6983148,
+        "model_elapsed_seconds": 805.5532280355692
+      },
+      "pompeii": {
+        "score100": 88.88888888888889,
+        "cost_usd": 1.982176,
+        "model_elapsed_seconds": 1118.6837483327836
+      },
+      "pelican": {
+        "score": 97,
+        "cost_usd": 0.816364,
+        "model_elapsed_seconds": 1065.11857708171
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0778496,
+        "model_elapsed_seconds": 280.19540591165423
+      }
+    },
+    {
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "combined": {
+        "score": 59,
+        "cost_usd": 0.480764,
+        "model_elapsed_seconds": 322.0988211836666
+      },
+      "pompeii": {
+        "score100": 72.0,
+        "cost_usd": 0.53983,
+        "model_elapsed_seconds": 363.60696264356375
+      },
+      "pelican": {
+        "score": 82.5,
+        "cost_usd": 0.362634,
+        "model_elapsed_seconds": 170.63422942347825
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.08051,
+        "model_elapsed_seconds": 74.42430426366627
+      }
+    },
+    {
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "combined": {
+        "score": 69,
+        "cost_usd": 0.511234,
+        "model_elapsed_seconds": 381.85854128561914
+      },
+      "pompeii": {
+        "score100": 96.55172413793103,
+        "cost_usd": 2.041096,
+        "model_elapsed_seconds": 852.5879950281233
+      },
+      "pelican": {
+        "score": 97,
+        "cost_usd": 0.389874,
+        "model_elapsed_seconds": 185.83612799830735
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.08366,
+        "model_elapsed_seconds": 62.722199311479926
+      }
+    },
+    {
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "combined": {
+        "score": 69,
+        "cost_usd": 1.558786,
+        "model_elapsed_seconds": 565.9298246446997
+      },
+      "pompeii": {
+        "score100": 96.55172413793103,
+        "cost_usd": 0.871484,
+        "model_elapsed_seconds": 476.61352941021323
+      },
+      "pelican": {
+        "score": 98,
+        "cost_usd": 0.549356,
+        "model_elapsed_seconds": 265.7933183889836
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.09066,
+        "model_elapsed_seconds": 87.12716786749661
+      }
+    },
+    {
+      "model": "gpt-6-astra",
+      "effort": "xhigh",
+      "combined": {
+        "score": 79,
+        "cost_usd": 1.702794,
+        "model_elapsed_seconds": 862.817938156426
+      },
+      "pompeii": {
+        "score100": 92.85714285714286,
+        "cost_usd": 2.484286,
+        "model_elapsed_seconds": 1133.3887186329812
+      },
+      "pelican": {
+        "score": 97,
+        "cost_usd": 1.737008,
+        "model_elapsed_seconds": 691.2397423777729
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.17798,
+        "model_elapsed_seconds": 118.12718291208148
+      }
+    },
+    {
+      "model": "gpt-6-astra",
+      "effort": "max",
+      "combined": {
+        "score": 79,
+        "cost_usd": 2.47265,
+        "model_elapsed_seconds": 1254.5978696979582
+      },
+      "pompeii": {
+        "score100": 88.88888888888889,
+        "cost_usd": 1.773928,
+        "model_elapsed_seconds": 855.9085087031126
+      },
+      "pelican": {
+        "score": 94.5,
+        "cost_usd": 3.5431,
+        "model_elapsed_seconds": 1366.0480578113347
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.192486,
+        "model_elapsed_seconds": 112.72706591524184
+      }
+    },
+    {
+      "model": "gpt-6-astra",
+      "effort": "ultra",
+      "combined": {
+        "score": 88,
+        "cost_usd": 2.954964,
+        "model_elapsed_seconds": 787.6512495372444
+      },
+      "pompeii": {
+        "score100": 88.88888888888889,
+        "cost_usd": 8.550542,
+        "model_elapsed_seconds": 970.6210945472121
+      },
+      "pelican": {
+        "score": 97,
+        "cost_usd": 1.921186,
+        "model_elapsed_seconds": 664.2891977075487
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.338564,
+        "model_elapsed_seconds": 110.42758240737021
+      }
+    },
+    {
+      "model": "gpt-6.1-terra",
+      "effort": "low",
+      "combined": {
+        "score": 65.5,
+        "cost_usd": 0.0318852,
+        "model_elapsed_seconds": 68.22140900790691
+      },
+      "pompeii": {
+        "score100": 30.0,
+        "cost_usd": 0.021785,
+        "model_elapsed_seconds": 49.92079550027847
+      },
+      "pelican": {
+        "score": 69,
+        "cost_usd": 0.0207576,
+        "model_elapsed_seconds": 47.570101419463754
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.010182,
+        "model_elapsed_seconds": 36.8703547809273
+      }
+    },
+    {
+      "model": "gpt-6.1-terra",
+      "effort": "medium",
+      "combined": {
+        "score": 59,
+        "cost_usd": 0.0370002,
+        "model_elapsed_seconds": 74.22350472398102
+      },
+      "pompeii": {
+        "score100": 80.0,
+        "cost_usd": 0.0555042,
+        "model_elapsed_seconds": 116.17642182856798
+      },
+      "pelican": {
+        "score": 62,
+        "cost_usd": 0.026102,
+        "model_elapsed_seconds": 57.008346958085895
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.013445,
+        "model_elapsed_seconds": 41.71968853473663
+      }
+    },
+    {
+      "model": "gpt-6.1-terra",
+      "effort": "high",
+      "combined": {
+        "score": 69,
+        "cost_usd": 0.0534398,
+        "model_elapsed_seconds": 98.32496926374733
+      },
+      "pompeii": {
+        "score100": 23.52941176470588,
+        "cost_usd": 0.095264,
+        "model_elapsed_seconds": 205.29045145399868
+      },
+      "pelican": {
+        "score": 75.5,
+        "cost_usd": 0.0254226,
+        "model_elapsed_seconds": 53.47046593017876
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.011685,
+        "model_elapsed_seconds": 37.31830274499953
+      }
+    },
+    {
+      "model": "gpt-6.1-terra",
+      "effort": "xhigh",
+      "combined": {
+        "score": 69,
+        "cost_usd": 0.0688606,
+        "model_elapsed_seconds": 141.01543180458248
+      },
+      "pompeii": {
+        "score100": 57.14285714285714,
+        "cost_usd": 0.1808842,
+        "model_elapsed_seconds": 351.50368173606694
+      },
+      "pelican": {
+        "score": 79,
+        "cost_usd": 0.0342676,
+        "model_elapsed_seconds": 66.9727769549936
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.011553,
+        "model_elapsed_seconds": 36.869461216032505
+      }
+    },
+    {
+      "model": "gpt-6.1-terra",
+      "effort": "max",
+      "combined": {
+        "score": 69,
+        "cost_usd": 0.3305702,
+        "model_elapsed_seconds": 494.31651786901057
+      },
+      "pompeii": {
+        "score100": 80.0,
+        "cost_usd": 1.7022988,
+        "model_elapsed_seconds": 1692.656388675794
+      },
+      "pelican": {
+        "score": 95,
+        "cost_usd": 0.1598678,
+        "model_elapsed_seconds": 287.5958173517138
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.011063,
+        "model_elapsed_seconds": 35.36901455745101
+      }
+    },
+    {
+      "model": "gpt-6.1-terra",
+      "effort": "ultra",
+      "combined": {
+        "score": 69,
+        "cost_usd": 0.1545256,
+        "model_elapsed_seconds": 149.0166345052421
+      },
+      "pompeii": {
+        "score100": 75.0,
+        "cost_usd": 0.8144242,
+        "model_elapsed_seconds": 522.9251884520054
+      },
+      "pelican": {
+        "score": 82,
+        "cost_usd": 0.04253,
+        "model_elapsed_seconds": 79.22318534366786
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0307522,
+        "model_elapsed_seconds": 65.47180919907987
+      }
+    },
+    {
+      "model": "gpt-6-sol",
+      "effort": "low",
+      "combined": {
+        "score": 58,
+        "cost_usd": 0.0653176,
+        "model_elapsed_seconds": 87.52454122342169
+      },
+      "pompeii": {
+        "score100": 30.0,
+        "cost_usd": 0.1541208,
+        "model_elapsed_seconds": 225.99318372644484
+      },
+      "pelican": {
+        "score": 70,
+        "cost_usd": 0.0420104,
+        "model_elapsed_seconds": 70.07354906201363
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0360684,
+        "model_elapsed_seconds": 64.0071431081742
+      }
+    },
+    {
+      "model": "gpt-6-sol",
+      "effort": "medium",
+      "combined": {
+        "score": 69,
+        "cost_usd": 0.1972104,
+        "model_elapsed_seconds": 204.23638116195798
+      },
+      "pompeii": {
+        "score100": 50.0,
+        "cost_usd": 0.6706272,
+        "model_elapsed_seconds": 415.76124982722104
+      },
+      "pelican": {
+        "score": 90,
+        "cost_usd": 0.077658,
+        "model_elapsed_seconds": 108.97718071565032
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0368304,
+        "model_elapsed_seconds": 73.67288636416197
+      }
+    },
+    {
+      "model": "gpt-6-sol",
+      "effort": "high",
+      "combined": {
+        "score": 68.5,
+        "cost_usd": 0.2286432,
+        "model_elapsed_seconds": 217.02448983676732
+      },
+      "pompeii": {
+        "score100": 56.00000000000001,
+        "cost_usd": 0.511104,
+        "model_elapsed_seconds": 414.76065810769796
+      },
+      "pelican": {
+        "score": 89,
+        "cost_usd": 0.125272,
+        "model_elapsed_seconds": 146.01616545580328
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0319692,
+        "model_elapsed_seconds": 60.97239611111581
+      }
+    },
+    {
+      "model": "gpt-6-sol",
+      "effort": "xhigh",
+      "combined": {
+        "score": 66.5,
+        "cost_usd": 0.2498248,
+        "model_elapsed_seconds": 315.74875316768885
+      },
+      "pompeii": {
+        "score100": 64.0,
+        "cost_usd": 1.0031328,
+        "model_elapsed_seconds": 880.8640142641962
+      },
+      "pelican": {
+        "score": 76,
+        "cost_usd": 0.1643696,
+        "model_elapsed_seconds": 155.78235825523734
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0465716,
+        "model_elapsed_seconds": 67.87264640443027
+      }
+    },
+    {
+      "model": "gpt-6-sol",
+      "effort": "max",
+      "combined": {
+        "score": 69,
+        "cost_usd": 0.4155596,
+        "model_elapsed_seconds": 436.4639546331018
+      },
+      "pompeii": {
+        "score100": 72.0,
+        "cost_usd": 1.452756,
+        "model_elapsed_seconds": 890.1632420700043
+      },
+      "pelican": {
+        "score": 97.5,
+        "cost_usd": 0.3434024,
+        "model_elapsed_seconds": 278.14494497328997
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0531124,
+        "model_elapsed_seconds": 65.17184906080365
+      }
+    },
+    {
+      "model": "gpt-6-sol",
+      "effort": "ultra",
+      "combined": {
+        "score": 69,
+        "cost_usd": 0.8365092,
+        "model_elapsed_seconds": 747.8460991512984
+      },
+      "pompeii": {
+        "score100": 88.88888888888889,
+        "cost_usd": 6.1570832,
+        "model_elapsed_seconds": 832.1009229831398
+      },
+      "pelican": {
+        "score": 95.5,
+        "cost_usd": 0.5208912,
+        "model_elapsed_seconds": 385.4584672320634
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.1219192,
+        "model_elapsed_seconds": 73.57446035183966
+      }
+    },
+    {
+      "model": "gpt-6-luna",
+      "effort": "low",
+      "combined": {
+        "score": 52.5,
+        "cost_usd": 0.00393046,
+        "model_elapsed_seconds": 70.07258737273514
+      },
+      "pompeii": {
+        "score100": 35.714285714285715,
+        "cost_usd": 0.00421352,
+        "model_elapsed_seconds": 57.17111126892269
+      },
+      "pelican": {
+        "score": 47.5,
+        "cost_usd": 0.00257812,
+        "model_elapsed_seconds": 51.32240639999509
+      },
+      "candy": {
+        "correct": false,
+        "cost_usd": 0.0005084,
+        "model_elapsed_seconds": 23.06683815456927
+      }
+    },
+    {
+      "model": "gpt-6-luna",
+      "effort": "medium",
+      "combined": {
+        "score": 42.5,
+        "cost_usd": 0.00426498,
+        "model_elapsed_seconds": 66.82358197495341
+      },
+      "pompeii": {
+        "score100": 33.33333333333333,
+        "cost_usd": 0.00311434,
+        "model_elapsed_seconds": 63.07146776653826
+      },
+      "pelican": {
+        "score": 68,
+        "cost_usd": 0.00324032,
+        "model_elapsed_seconds": 60.220646211877465
+      },
+      "candy": {
+        "correct": false,
+        "cost_usd": 0.0005534,
+        "model_elapsed_seconds": 24.76847297511995
+      }
+    },
+    {
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "combined": {
+        "score": 54,
+        "cost_usd": 0.00630348,
+        "model_elapsed_seconds": 107.27569607831538
+      },
+      "pompeii": {
+        "score100": 38.095238095238095,
+        "cost_usd": 0.01513506,
+        "model_elapsed_seconds": 207.6397870220244
+      },
+      "pelican": {
+        "score": 63,
+        "cost_usd": 0.0036969,
+        "model_elapsed_seconds": 68.17294871993363
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0020634,
+        "model_elapsed_seconds": 62.37167994491756
+      }
+    },
+    {
+      "model": "gpt-6-luna",
+      "effort": "xhigh",
+      "combined": {
+        "score": 53,
+        "cost_usd": 0.00971056,
+        "model_elapsed_seconds": 146.44125191494823
+      },
+      "pompeii": {
+        "score100": 58.333333333333336,
+        "cost_usd": 0.09632068,
+        "model_elapsed_seconds": 968.073900539428
+      },
+      "pelican": {
+        "score": 53.5,
+        "cost_usd": 0.00511246,
+        "model_elapsed_seconds": 93.57482959143817
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0029889,
+        "model_elapsed_seconds": 68.01193301938474
+      }
+    },
+    {
+      "model": "gpt-6-luna",
+      "effort": "max",
+      "combined": {
+        "score": 59,
+        "cost_usd": 0.0129507,
+        "model_elapsed_seconds": 162.7855969518423
+      },
+      "pompeii": {
+        "score100": 26.08695652173913,
+        "cost_usd": 0.10039896,
+        "model_elapsed_seconds": 926.2736288104206
+      },
+      "pelican": {
+        "score": 64.5,
+        "cost_usd": 0.00706672,
+        "model_elapsed_seconds": 107.17662287503481
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0030789,
+        "model_elapsed_seconds": 67.72315398417413
+      }
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "effort": "low",
+      "combined": {
+        "score": 51,
+        "cost_usd": 0.1555744,
+        "model_elapsed_seconds": 86.47565262205899
+      },
+      "pompeii": {
+        "score100": 38.46153846153847,
+        "cost_usd": 0.295276,
+        "model_elapsed_seconds": 164.28284298814833
+      },
+      "pelican": {
+        "score": 37,
+        "cost_usd": 0.1127672,
+        "model_elapsed_seconds": 68.02345884218812
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0789208,
+        "model_elapsed_seconds": 68.62248243577778
+      }
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "combined": {
+        "score": 57.5,
+        "cost_usd": 0.2225592,
+        "model_elapsed_seconds": 116.17707975581288
+      },
+      "pompeii": {
+        "score100": 41.66666666666667,
+        "cost_usd": 1.3263048,
+        "model_elapsed_seconds": 638.6864953991026
+      },
+      "pelican": {
+        "score": 66.5,
+        "cost_usd": 0.166636,
+        "model_elapsed_seconds": 77.07255942374468
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0935952,
+        "model_elapsed_seconds": 76.77376382611692
+      }
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "effort": "high",
+      "combined": {
+        "score": 67.5,
+        "cost_usd": 0.342584,
+        "model_elapsed_seconds": 142.43058012239635
+      },
+      "pompeii": {
+        "score100": 34.78260869565217,
+        "cost_usd": 1.2301344,
+        "model_elapsed_seconds": 600.677355369553
+      },
+      "pelican": {
+        "score": 66.5,
+        "cost_usd": 0.2011504,
+        "model_elapsed_seconds": 101.17563764378428
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.08524,
+        "model_elapsed_seconds": 70.07141748815775
+      }
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "effort": "xhigh",
+      "combined": {
+        "score": 59,
+        "cost_usd": 0.5238224,
+        "model_elapsed_seconds": 293.4509231168777
+      },
+      "pompeii": {
+        "score100": 56.00000000000001,
+        "cost_usd": 1.954408,
+        "model_elapsed_seconds": 919.4125546328723
+      },
+      "pelican": {
+        "score": 70,
+        "cost_usd": 0.3172304,
+        "model_elapsed_seconds": 148.4311340712011
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0977112,
+        "model_elapsed_seconds": 72.8236946221441
+      }
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "effort": "max",
+      "combined": {
+        "score": 59,
+        "cost_usd": 0.89246,
+        "model_elapsed_seconds": 434.1601065918803
+      },
+      "pompeii": {
+        "score100": 93.33333333333333,
+        "cost_usd": 2.0539464,
+        "model_elapsed_seconds": 716.0492790658027
+      },
+      "pelican": {
+        "score": 84,
+        "cost_usd": 0.4008744,
+        "model_elapsed_seconds": 161.93491374328732
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.1189952,
+        "model_elapsed_seconds": 79.8252473063767
+      }
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "effort": "ultra",
+      "combined": {
+        "score": 69,
+        "cost_usd": 2.2931032,
+        "model_elapsed_seconds": 553.1253054384142
+      },
+      "pompeii": {
+        "score100": 96.7741935483871,
+        "cost_usd": 12.2989016,
+        "model_elapsed_seconds": 849.0271061845124
+      },
+      "pelican": {
+        "score": 86,
+        "cost_usd": 2.1832256,
+        "model_elapsed_seconds": 441.76362162455916
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.5112904,
+        "model_elapsed_seconds": 93.97647615522146
+      }
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "effort": "low",
+      "combined": {
+        "score": 48.5,
+        "cost_usd": 0.0986432,
+        "model_elapsed_seconds": 123.12735608406365
+      },
+      "pompeii": {
+        "score100": 11.76470588235294,
+        "cost_usd": 0.2915688,
+        "model_elapsed_seconds": 211.48754628375173
+      },
+      "pelican": {
+        "score": 53,
+        "cost_usd": 0.0553724,
+        "model_elapsed_seconds": 78.12309106253088
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0302276,
+        "model_elapsed_seconds": 71.22140417434275
+      }
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "combined": {
+        "score": 44.5,
+        "cost_usd": 0.1250352,
+        "model_elapsed_seconds": 155.1837302427739
+      },
+      "pompeii": {
+        "score100": 22.22222222222222,
+        "cost_usd": 0.5913152,
+        "model_elapsed_seconds": 650.9375454485416
+      },
+      "pelican": {
+        "score": 44.5,
+        "cost_usd": 0.0666428,
+        "model_elapsed_seconds": 79.67455091699958
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0681328,
+        "model_elapsed_seconds": 150.83294877409935
+      }
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "effort": "high",
+      "combined": {
+        "score": 47,
+        "cost_usd": 0.1205284,
+        "model_elapsed_seconds": 172.13311001472175
+      },
+      "pompeii": {
+        "score100": 54.54545454545454,
+        "cost_usd": 0.5582412,
+        "model_elapsed_seconds": 838.3664059583098
+      },
+      "pelican": {
+        "score": 32.5,
+        "cost_usd": 0.0845336,
+        "model_elapsed_seconds": 116.22834097221494
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0772416,
+        "model_elapsed_seconds": 164.83851968869567
+      }
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "effort": "xhigh",
+      "combined": {
+        "score": 56,
+        "cost_usd": 0.167854,
+        "model_elapsed_seconds": 229.8394171167165
+      },
+      "pompeii": {
+        "score100": 80.0,
+        "cost_usd": 2.8304756,
+        "model_elapsed_seconds": 1249.298495784402
+      },
+      "pelican": {
+        "score": 70,
+        "cost_usd": 0.1256368,
+        "model_elapsed_seconds": 154.23116145655513
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0891868,
+        "model_elapsed_seconds": 79.0252227652818
+      }
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "effort": "max",
+      "combined": {
+        "score": 58.5,
+        "cost_usd": 0.2785272,
+        "model_elapsed_seconds": 360.1523107327521
+      },
+      "pompeii": {
+        "score100": 96.7741935483871,
+        "cost_usd": 3.946084,
+        "model_elapsed_seconds": 2647.804776225239
+      },
+      "pelican": {
+        "score": 71,
+        "cost_usd": 0.1526588,
+        "model_elapsed_seconds": 83.37419958412647
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.1008344,
+        "model_elapsed_seconds": 211.43756720609963
+      }
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "effort": "ultra",
+      "combined": {
+        "score": 61,
+        "cost_usd": 0.6860964,
+        "model_elapsed_seconds": 653.83424539119
+      },
+      "pompeii": {
+        "score100": 96.7741935483871,
+        "cost_usd": 14.659634,
+        "model_elapsed_seconds": 2203.301766136661
+      },
+      "pelican": {
+        "score": 75,
+        "cost_usd": 0.6310496,
+        "model_elapsed_seconds": 508.8796084038913
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.394652,
+        "model_elapsed_seconds": 241.84418505989015
+      }
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "effort": "low",
+      "combined": {
+        "score": 26,
+        "cost_usd": 0.00687988,
+        "model_elapsed_seconds": 44.119086703285575
+      },
+      "pompeii": {
+        "score100": 34.78260869565217,
+        "cost_usd": 0.01440772,
+        "model_elapsed_seconds": 71.67427221499383
+      },
+      "pelican": {
+        "score": 51.5,
+        "cost_usd": 0.00724196,
+        "model_elapsed_seconds": 45.92035176046193
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0037562,
+        "model_elapsed_seconds": 37.26861350797117
+      }
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "effort": "medium",
+      "combined": {
+        "score": 42,
+        "cost_usd": 0.00997816,
+        "model_elapsed_seconds": 58.07058522105217
+      },
+      "pompeii": {
+        "score100": 34.78260869565217,
+        "cost_usd": 0.03318412,
+        "model_elapsed_seconds": 252.6423788201064
+      },
+      "pelican": {
+        "score": 51,
+        "cost_usd": 0.00714388,
+        "model_elapsed_seconds": 47.1697547044605
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0029,
+        "model_elapsed_seconds": 31.369048548862338
+      }
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "effort": "high",
+      "combined": {
+        "score": 49,
+        "cost_usd": 0.01526396,
+        "model_elapsed_seconds": 76.57383256405592
+      },
+      "pompeii": {
+        "score100": 50.0,
+        "cost_usd": 0.10274416,
+        "model_elapsed_seconds": 693.3963071852922
+      },
+      "pelican": {
+        "score": 66,
+        "cost_usd": 0.011888,
+        "model_elapsed_seconds": 65.72159043885767
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.00602492,
+        "model_elapsed_seconds": 48.47054552286863
+      }
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "effort": "xhigh",
+      "combined": {
+        "score": 51.5,
+        "cost_usd": 0.01852308,
+        "model_elapsed_seconds": 89.97447134926915
+      },
+      "pompeii": {
+        "score100": 34.78260869565217,
+        "cost_usd": 0.29939264,
+        "model_elapsed_seconds": 883.5861137267202
+      },
+      "pelican": {
+        "score": 50,
+        "cost_usd": 0.01638436,
+        "model_elapsed_seconds": 73.12269043363631
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.0046976,
+        "model_elapsed_seconds": 41.26989591680467
+      }
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "effort": "max",
+      "combined": {
+        "score": 50,
+        "cost_usd": 0.03224552,
+        "model_elapsed_seconds": 142.2819878514856
+      },
+      "pompeii": {
+        "score100": 93.33333333333333,
+        "cost_usd": 1.05594136,
+        "model_elapsed_seconds": 1757.518253011629
+      },
+      "pelican": {
+        "score": 71.5,
+        "cost_usd": 0.02011192,
+        "model_elapsed_seconds": 93.87651129253209
+      },
+      "candy": {
+        "correct": true,
+        "cost_usd": 0.018959,
+        "model_elapsed_seconds": 118.5286565143615
+      }
+    }
+  ]
+}

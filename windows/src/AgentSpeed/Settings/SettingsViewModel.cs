@@ -473,6 +473,12 @@ internal sealed class SettingsViewModel : ObservableObject
         set => Apply(s => s with { BarShowUnit = value });
     }
 
+    public bool BarCodexQuota
+    {
+        get => S.BarCodexQuota;
+        set => Apply(s => s with { BarCodexQuota = value });
+    }
+
     public string TaskbarStatus => _taskbarPresence switch
     {
         TaskbarPresence.Floating => _loc["win.settings.taskbar.floating"],
@@ -693,7 +699,8 @@ internal sealed class SettingsViewModel : ObservableObject
 
     public string PrivacyReport => _loc["privacy.report"];
 
-    public string NetworkHint => _loc[_reportHost is null ? "settings.network.hint" : "settings.network.hint.report"];
+    public string NetworkHint => _loc[_reportHost is null ? "settings.network.hint" : "settings.network.hint.report"]
+        + " " + _loc["win.radar.networkHint"] + " " + _loc["win.quota.networkHint"];
 
     public void Relocalize(Localizer localizer)
     {

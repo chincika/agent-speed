@@ -42,6 +42,7 @@ public static class SettingsSerializer
             w.WriteString("mode", s.BarMode.ToString());
             w.WriteBoolean("coloredGlyph", s.BarColoredGlyph);
             w.WriteBoolean("showUnit", s.BarShowUnit);
+            w.WriteBoolean("codexQuota", s.BarCodexQuota);
             w.WriteBoolean("secondary", s.BarSecondary);
             w.WriteEndObject();
 
@@ -70,6 +71,7 @@ public static class SettingsSerializer
             w.WriteEndObject();
 
             w.WriteBoolean("showOrbs", s.ShowOrbs);
+            w.WriteBoolean("orbOnlyWhenCodexForeground", s.OrbOnlyWhenCodexForeground);
             w.WriteString("orbNames", OrbNamesModes.Key(s.OrbNames));
             w.WritePropertyName("orbs");
             OrbsJson.Write(w, s.Orbs);
@@ -225,9 +227,11 @@ public static class SettingsSerializer
             BarMode = ReadEnum(taskbar, "mode", d.BarMode),
             BarColoredGlyph = ReadBool(taskbar, "coloredGlyph", d.BarColoredGlyph),
             BarShowUnit = ReadBool(taskbar, "showUnit", d.BarShowUnit),
+            BarCodexQuota = ReadBool(taskbar, "codexQuota", d.BarCodexQuota),
             BarSecondary = ReadBool(taskbar, "secondary", d.BarSecondary),
             ShowOrb = ReadBool(orb, "show", d.ShowOrb),
             ShowOrbs = ReadBool(root, "showOrbs", ReadBool(orb, "show", d.ShowOrb)),
+            OrbOnlyWhenCodexForeground = ReadBool(root, "orbOnlyWhenCodexForeground", d.OrbOnlyWhenCodexForeground),
             OrbNames = OrbNamesModes.Parse(ReadString(root, "orbNames")),
             OrbSize = ReadDouble(orb, "size", d.OrbSize),
             OrbOpacity = ReadDouble(orb, "opacity", d.OrbOpacity),

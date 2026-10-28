@@ -30,6 +30,7 @@ internal sealed class TaskbarRenderer
     private readonly DrawingVisual _visual = new();
     private readonly TaskbarSecondaryText _secondary = new();
     private readonly TaskbarTrafficText _traffic = new();
+    private readonly TaskbarQuotaText _quota = new();
     private RenderTargetBitmap? _bitmap;
     private double _cacheScale = -1;
     private Color _cachePrimary;
@@ -66,6 +67,8 @@ internal sealed class TaskbarRenderer
 
     private static bool ShowsTraffic(TaskbarState state) => state.Traffic is not null && state.Mode != BarDisplayMode.GlyphOnly;
 
+    private static bool ShowsQuota(TaskbarState state) => state.Quota is not null && state.Mode != BarDisplayMode.GlyphOnly;
+
     /// <summary>Widget length along the taskbar in physical pixels: the content width.</summary>
     public int MeasureLength(TaskbarState state, double scale, bool vertical)
     {
@@ -75,6 +78,7 @@ internal sealed class TaskbarRenderer
         {
             var lines = state.Mode == BarDisplayMode.GlyphAndValue ? 2 : 1;
             var height = Padding + lines * 20 + (state.ShowUnit && state.Mode != BarDisplayMode.GlyphOnly ? 14 : 0)
+                + (ShowsQuota(state) ? TaskbarQuotaText.Height : 0)
                 + (ShowsSecondary(state) ? TaskbarSecondaryText.Height : 0) + (ShowsTraffic(state) ? TaskbarTrafficText.Height : 0) + Padding;
             return (int)Math.Ceiling(height * scale);
         }
@@ -105,6 +109,12 @@ internal sealed class TaskbarRenderer
             if (state.ShowUnit && _unit is not null)
             {
                 width += UnitGap + _unit.WidthIncludingTrailingWhitespace;
+            }
+
+            if (ShowsQuota(state))
+            {
+                var colors = Palette(state);
+                width += _quota.Width(state.Quota!, _cacheScale, colors.Primary, colors.Secondary);
             }
 
             if (ShowsSecondary(state))
@@ -206,6 +216,12 @@ internal sealed class TaskbarRenderer
             x += _unit.WidthIncludingTrailingWhitespace;
         }
 
+        if (ShowsQuota(state))
+        {
+            _quota.Draw(dc, state.Quota!, x, centerY, scale, colors.Primary, colors.Secondary);
+            x += _quota.Width(state.Quota!, scale, colors.Primary, colors.Secondary);
+        }
+
         if (ShowsSecondary(state))
         {
             _secondary.Draw(dc, state.Secondary!, x, centerY, SecondaryCell, scale, colors.Primary, colors.Secondary);
@@ -244,6 +260,14 @@ internal sealed class TaskbarRenderer
         {
             dc.DrawText(_unit, new Point((width - _unit.WidthIncludingTrailingWhitespace) / 2, y - 2));
             y += 14;
+        }
+
+        if (ShowsQuota(state))
+        {
+            var blockWidth = _quota.Width(state.Quota!, 1, colors.Primary, colors.Secondary) - TaskbarQuotaText.Gap;
+            _quota.Draw(dc, state.Quota!, (width - blockWidth) / 2 - TaskbarQuotaText.Gap, y + TaskbarQuotaText.Height / 2,
+                1, colors.Primary, colors.Secondary);
+            y += TaskbarQuotaText.Height;
         }
 
         if (ShowsSecondary(state))

@@ -8,7 +8,7 @@
 
 [English](README.md) · [繁體中文](README.zh-TW.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
-[![Release](https://img.shields.io/github/v/release/zoefix/agent-speed?style=flat-square)](https://github.com/zoefix/agent-speed/releases/latest)
+[![Release](https://img.shields.io/github/v/release/chincika/agent-speed?style=flat-square)](https://github.com/chincika/agent-speed/releases/latest)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?style=flat-square&logo=apple)
 ![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat-square&logo=windows)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
@@ -19,7 +19,7 @@
 
 ## Install
 
-> This fork currently provides Codex follow mode in the Windows source only. The upstream installation commands below install the original project without this fork's changes; build this repository or use a future release from this fork. Windows update checks use this fork's releases, which do not exist yet.
+> The Windows installer and update checks use this fork. The macOS installer below uses the upstream project; the Codex additions are Windows-only.
 
 **macOS 14 or later** (Apple Silicon and Intel) — paste into Terminal:
 
@@ -30,7 +30,7 @@ curl -fsSL https://raw.githubusercontent.com/zoefix/agent-speed/main/install.sh 
 **Windows 10 / 11** (x64 and ARM64) — paste into PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/zoefix/agent-speed/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/chincika/agent-speed/main/install.ps1 | iex
 ```
 
 That's it. The installer downloads the latest release from GitHub, verifies its SHA-256 checksum, installs it and starts it. Run the same command again to update.
@@ -43,13 +43,24 @@ curl -fsSL https://raw.githubusercontent.com/zoefix/agent-speed/main/install.sh 
 ```
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/zoefix/agent-speed/main/install.ps1))) -Uninstall
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/chincika/agent-speed/main/install.ps1))) -Uninstall
 ```
 
 Add `--purge` / `-Purge` to remove settings as well. On Windows you can also uninstall from *Settings → Apps*.
 </details>
 
 ## What you get
+
+**Windows · Orbs follow Codex focus:** Enable **Settings → Floating orb → Show only when
+Codex is in the foreground** to hide the orbs when switching apps and restore them when
+returning to Codex. Positions, live measurements and individual visibility are preserved.
+[Details](docs/CODEX-FOREGROUND-ORBS.md).
+
+**Windows · Model scores and recommendations:** The dashboard's bottom section recommends
+models for hard problems, daily development and simple tasks. Click to open the full Codex
+Radar score matrix with cost and duration. Public JSON is checked every three hours; unchanged
+or unavailable data keeps the last valid snapshot. Recommendations are computed locally,
+under the network master switch. [Rules and data source](docs/MODEL-RADAR.md).
 
 **Windows · Follow Codex:** Turn on **Settings → General → Follow Codex** (off by default). An interactive background watcher starts at Windows sign-in and opens Agent Speed with the Codex desktop app; Agent Speed exits normally after Codex closes. Follow mode takes precedence over Launch at login and does not track the Codex CLI. If you quit Agent Speed manually, it stays closed until the next Codex session. When opened manually before Codex, it remains open until Codex has started and exited. Turning the setting off removes the startup task. After moving the executable, turn the setting off and on again.
 
@@ -108,7 +119,7 @@ Ordinary Claude Desktop chat conversations are not stored on your computer, so t
 
 ## Privacy
 
-Read-only. Local-only. No telemetry, no accounts. Agent Speed makes only three kinds of automatic network requests, and each one sends nothing about you: the update check against GitHub Releases, a daily download of the public model price table from this repository (GitHub, with jsDelivr as a mirror), and — only when you show costs in a currency other than US dollars — a daily download of public exchange rates (open.er-api.com, with the fawazahmed0 currency API and Frankfurter as fallbacks). Every user requests the same files, so no server learns your currency, models or usage. One switch in Settings turns all network access off; costs then use the price table and rates shipped with the app. Agent Speed never stores or displays conversation content — only token counts, model names and project folder names. The usage history keeps only daily totals (including each day's API-equivalent cost), in a small database on your computer (`~/Library/Application Support/AgentSpeed`, `%LOCALAPPDATA%\AgentSpeed`), and can be cleared in Settings. Updates are verified against the release's SHA-256 checksums before they are installed; the checksums are published with the release, so they catch corrupted or tampered downloads, not a compromised repository. The price table is plain data checked against strict rules; it is not signed.
+Read-only. Local-only. No telemetry, no accounts. Agent Speed makes the following automatic network requests, each sending nothing about you (Windows also downloads public Codex Radar benchmark JSON every three hours): the update check against GitHub Releases, a daily download of the public model price table from this repository (GitHub, with jsDelivr as a mirror), and — only when you show costs in a currency other than US dollars — a daily download of public exchange rates (open.er-api.com, with the fawazahmed0 currency API and Frankfurter as fallbacks). Every user requests the same files, so no server learns your currency, models or usage. One switch in Settings turns all network access off; costs then use the price table and rates shipped with the app. Agent Speed never stores or displays conversation content — only token counts, model names and project folder names. The usage history keeps only daily totals (including each day's API-equivalent cost), in a small database on your computer (`~/Library/Application Support/AgentSpeed`, `%LOCALAPPDATA%\AgentSpeed`), and can be cleared in Settings. Updates are verified against the release's SHA-256 checksums before they are installed; the checksums are published with the release, so they catch corrupted or tampered downloads, not a compromised repository. The price table is plain data checked against strict rules; it is not signed.
 
 Network traffic: Agent Speed counts how many bytes programs send and receive, on this computer only. It never reads content, addresses or destinations; only live reporting (below), if you turn it on, sends your agents' byte counts to the service you chose. On Windows, per-agent traffic needs an optional helper service that runs as the restricted Local Service account and only counts bytes per process; it is installed and removed with one administrator prompt each ([details](spec/WINDOWS-SERVICE.md)).
 

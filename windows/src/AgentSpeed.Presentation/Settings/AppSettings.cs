@@ -103,6 +103,9 @@ public sealed record AppSettings
 
     public bool BarShowUnit { get; init; } = true;
 
+    /// <summary>Show the remaining Codex five-hour and weekly quota beside the taskbar value.</summary>
+    public bool BarCodexQuota { get; init; } = true;
+
     /// <summary>
     /// The taskbar's second value (DESIGN 3): with <see cref="CostSettings.LiveUnit"/> tokens, the live money rate after
     /// the value (the live value choice <c>settings.liveUnit.both</c>). Off by default; hidden in glyph-only mode.
@@ -117,6 +120,9 @@ public sealed record AppSettings
 
     /// <summary>Master switch of all floating orbs (DESIGN 2b); files without it take <see cref="ShowOrb"/>.</summary>
     public bool ShowOrbs { get; init; } = true;
+
+    /// <summary>Temporarily hide every orb unless the Codex desktop owns the foreground window.</summary>
+    public bool OrbOnlyWhenCodexForeground { get; init; }
 
     /// <summary>Every floating orb and its positions per display arrangement (settings value <c>orbs</c>).</summary>
     public OrbsDocument Orbs { get; init; } = OrbsDocument.ProcessDefault;
