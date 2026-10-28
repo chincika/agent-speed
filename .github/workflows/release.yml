@@ -3,6 +3,15 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build
+        required: true
+        type: string
+
+env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
 permissions:
   contents: read
@@ -13,9 +22,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - name: Check version and contracts
         run: |
-          test "$(cat VERSION)" = "${GITHUB_REF_NAME#v}"
+          test "$(cat VERSION)" = "${RELEASE_TAG#v}"
           python3 spec/tools/report_reference.py
           python3 spec/tools/execution_modes_reference.py
           python3 spec/tools/test_reporting_extensions.py
@@ -25,6 +36,8 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - name: Select newest Xcode
         run: |
           xcode="$(ls -d /Applications/Xcode*.app | grep -viE 'beta|_rc|release_candidate' | sort -V | tail -1)"
@@ -34,7 +47,7 @@ jobs:
         working-directory: macos
         run: swift test
       - name: Build app bundle
-        run: macos/scripts/build-app.sh --version "${GITHUB_REF_NAME#v}"
+        run: macos/scripts/build-app.sh --version "${RELEASE_TAG#v}"
       - uses: actions/upload-artifact@v7
         with:
           name: AgentSpeed-macOS
@@ -46,6 +59,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
@@ -59,7 +74,7 @@ jobs:
         run: dotnet test windows/tests/AgentSpeed.Windows.Tests -c Release
       - name: Publish
         shell: pwsh
-        run: ./windows/scripts/publish.ps1 -Version $env:GITHUB_REF_NAME.TrimStart('v')
+        run: ./windows/scripts/publish.ps1 -Version $env:RELEASE_TAG.TrimStart('v')
       - uses: actions/upload-artifact@v7
         with:
           name: AgentSpeed-Windows
@@ -74,6 +89,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/download-artifact@v8
         with:
           path: dist
@@ -85,9 +102,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          existing="$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft 2>/dev/null || true)"
+          existing="$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft 2>/dev/null || true)"
           if [ "$existing" = "true" ]; then
-            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+            gh release upload "$RELEASE_TAG" dist/* --clobber
             echo "Assets uploaded to the existing draft; publication remains manual."
             exit 0
           elif [ "$existing" = "false" ]; then
@@ -95,10 +112,10 @@ jobs:
             exit 0
           fi
           : > notes.md
-          if [ -f "docs/releases/${GITHUB_REF_NAME}.md" ]; then
-            cat "docs/releases/${GITHUB_REF_NAME}.md" >> notes.md
+          if [ -f "docs/releases/${RELEASE_TAG}.md" ]; then
+            cat "docs/releases/${RELEASE_TAG}.md" >> notes.md
           fi
-          sed "s/{{VERSION}}/${GITHUB_REF_NAME}/g" .github/release-notes.md >> notes.md
+          sed "s/{{VERSION}}/${RELEASE_TAG}/g" .github/release-notes.md >> notes.md
           flags=""
-          case "$GITHUB_REF_NAME" in *-*) flags="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" dist/* --title "Agent Speed ${GITHUB_REF_NAME}" --notes-file notes.md --verify-tag --draft $flags
+          case "$RELEASE_TAG" in *-*) flags="--prerelease" ;; esac
+          gh release create "$RELEASE_TAG" dist/* --title "Agent Speed ${RELEASE_TAG}" --notes-file notes.md --verify-tag --draft $flags
