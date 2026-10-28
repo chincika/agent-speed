@@ -1,11 +1,11 @@
 <#
 Agent Speed installer for Windows.
 
-    irm https://raw.githubusercontent.com/zoefix/agent-speed/main/install.ps1 | iex
+    irm https://raw.githubusercontent.com/chincika/agent-speed/main/install.ps1 | iex
 
 With options:
 
-    & ([scriptblock]::Create((irm https://raw.githubusercontent.com/zoefix/agent-speed/main/install.ps1))) -Uninstall
+    & ([scriptblock]::Create((irm https://raw.githubusercontent.com/chincika/agent-speed/main/install.ps1))) -Uninstall
 
 Options: -Version vX.Y.Z, -NoLaunch, -NoAutostart, -TrafficHelper, -Uninstall, -Purge
 
@@ -30,7 +30,7 @@ param(
     $ErrorActionPreference = 'Stop'
     $ProgressPreference = 'SilentlyContinue'
 
-    $Repo = 'zoefix/agent-speed'
+    $Repo = 'chincika/agent-speed'
     $AppName = 'Agent Speed'
     $ExeName = 'AgentSpeed.exe'
     $InstallDir = Join-Path $env:LOCALAPPDATA 'Programs\AgentSpeed'
@@ -406,6 +406,8 @@ function Remove-AgentSpeedTrafficHelper([hashtable]$Text, [string]$AppExe) {
         Write-Title
         Write-Step $T.Uninstalling
         Stop-AgentSpeed
+        $followSid = Get-AgentSpeedUserSid
+        if ($followSid) { & schtasks.exe /Delete /TN "Agent Speed - Codex Follow - $followSid" /F 2>$null | Out-Null }
         Remove-AgentSpeedTrafficHelper $T (Join-Path $InstallDir $ExeName)
         $found = Test-Path $InstallDir
         Remove-ItemProperty -Path $RunKey -Name 'AgentSpeed' -ErrorAction SilentlyContinue
@@ -487,6 +489,8 @@ function Remove-AgentSpeedTrafficHelper([hashtable]$Text, [string]$AppExe) {
             $uninstallBody = @"
 `$ErrorActionPreference = 'SilentlyContinue'
 Get-Process -Name 'AgentSpeed' | Stop-Process -Force
+`$followSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+& schtasks.exe /Delete /TN "Agent Speed - Codex Follow - `$followSid" /F 2>`$null | Out-Null
 Start-Sleep -Milliseconds 500
 $HelperCode
 Remove-AgentSpeedTrafficHelper @{ $helperText } $(ConvertTo-Literal $target)
@@ -529,7 +533,7 @@ Remove-Item -Path '$InstallDir' -Recurse -Force
             }
 
             if (-not $NoAutostart) {
-                New-ItemProperty -Path $RunKey -Name 'AgentSpeed' -Value "`"$target`"" -PropertyType String -Force | Out-Null
+                New-ItemProperty -Path $RunKey -Name 'AgentSpeed' -Value "`"$target`" --at-login" -PropertyType String -Force | Out-Null
             }
 
             Write-Done "$($T.Done) $fileVersion → $InstallDir"

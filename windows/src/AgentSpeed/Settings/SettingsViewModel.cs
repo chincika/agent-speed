@@ -372,6 +372,52 @@ internal sealed class SettingsViewModel : ObservableObject
         }
     }
 
+    public bool FollowCodex
+    {
+        get => S.FollowCodex;
+        set
+        {
+            if (_syncing || value == S.FollowCodex)
+            {
+                return;
+            }
+
+            if (value && !CodexFollowStartup.Register())
+            {
+                ShowFollowError();
+                OnPropertyChanged();
+                return;
+            }
+
+            if (value) { AutoStart.Refresh(); }
+
+            _settings.Update(s => s with { FollowCodex = value });
+            if (!_settings.Flush())
+            {
+                _settings.Update(s => s with { FollowCodex = !value });
+                if (value) { CodexFollowStartup.Unregister(); }
+                ShowFollowError();
+                return;
+            }
+
+            if (value && !CodexFollowStartup.Start())
+            {
+                _settings.Update(s => s with { FollowCodex = false });
+                _settings.Flush();
+                CodexFollowStartup.Unregister();
+                ShowFollowError();
+            }
+            else if (!value && !CodexFollowStartup.Unregister())
+            {
+                ShowFollowError();
+            }
+        }
+    }
+
+    private void ShowFollowError() => System.Windows.MessageBox.Show(
+        _loc["win.settings.followCodex.error"], _loc["win.settings.followCodex"],
+        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+
     public int MetricIndex
     {
         get => (int)S.Metric;

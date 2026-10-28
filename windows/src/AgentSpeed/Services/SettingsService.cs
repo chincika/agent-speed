@@ -70,22 +70,24 @@ internal sealed class SettingsService : IDisposable
         Changed?.Invoke(this, new SettingsChangedEventArgs(previous, next));
     }
 
-    public void Flush()
+    public bool Flush()
     {
         _saveTimer.Stop();
         if (!_dirty || _ephemeral)
         {
-            return;
+            return !_ephemeral;
         }
 
         try
         {
             _store.Save(Current);
             _dirty = false;
+            return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             AppLog.Warn("Saving settings failed; will retry on the next change.", ex);
+            return false;
         }
     }
 

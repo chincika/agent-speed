@@ -29,6 +29,9 @@
         <controls:SettingsCard Header="{loc:Loc settings.launchAtLogin}" Icon="&#xE7E8;" Description="{loc:Loc win.settings.launchAtLogin.description}">
             <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding LaunchAtLogin, Mode=TwoWay}" AutomationProperties.Name="{loc:Loc settings.launchAtLogin}" />
         </controls:SettingsCard>
+        <controls:SettingsCard Header="{loc:Loc win.settings.followCodex}" Icon="&#xE768;" Description="{loc:Loc win.settings.followCodex.description}">
+            <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding FollowCodex, Mode=TwoWay}" AutomationProperties.Name="{loc:Loc win.settings.followCodex}" />
+        </controls:SettingsCard>
         <controls:SettingsCard Header="{loc:Loc settings.metric}" Icon="&#xEC4A;" Description="{loc:Loc win.settings.metric.description}">
             <ComboBox MinWidth="200" SelectedIndex="{Binding MetricIndex, Mode=TwoWay}" AutomationProperties.Name="{loc:Loc settings.metric}">
                 <ComboBoxItem Content="{loc:Loc metric.output}" />

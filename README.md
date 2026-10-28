@@ -19,6 +19,8 @@
 
 ## Install
 
+> This fork currently provides Codex follow mode in the Windows source only. The upstream installation commands below install the original project without this fork's changes; build this repository or use a future release from this fork. Windows update checks use this fork's releases, which do not exist yet.
+
 **macOS 14 or later** (Apple Silicon and Intel) — paste into Terminal:
 
 ```sh
@@ -48,6 +50,8 @@ Add `--purge` / `-Purge` to remove settings as well. On Windows you can also uni
 </details>
 
 ## What you get
+
+**Windows · Follow Codex:** Turn on **Settings → General → Follow Codex** (off by default). An interactive background watcher starts at Windows sign-in and opens Agent Speed with the Codex desktop app; Agent Speed exits normally after Codex closes. Follow mode takes precedence over Launch at login and does not track the Codex CLI. If you quit Agent Speed manually, it stays closed until the next Codex session. When opened manually before Codex, it remains open until Codex has started and exited. Turning the setting off removes the startup task. After moving the executable, turn the setting off and on again.
 
 - **Floating orb** — a smoked-glass instrument with a 36-segment LED gauge. As speed climbs, so does its title — from *Walking* and *Bicycle* through *Bullet Train* and *Fighter Jet* to *Rocket* at the redline — while the gauge sweeps through the heat spectrum, a comet races around the ring, sparks fly, embers rise and every finished response sends out a shockwave. Beat your daily peak and it celebrates.
 - **Five orb styles, as many orbs as you like** — *LED Gauge*, *Needle Tachometer*, *Liquid Energy*, *Reactor* and *Minimal Ring*. Give each orb its own mix of sources (all of them, one tool, or Claude Code + Codex) and a glass name plate that stays legible on any wallpaper.

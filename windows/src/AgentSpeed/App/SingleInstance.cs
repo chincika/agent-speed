@@ -22,7 +22,7 @@ internal sealed class SingleInstance : IDisposable
     /// How long to wait for a running instance to release the mutex before treating this launch as a second instance
     /// (used by the relaunch after an update, so the exiting old instance does not swallow it).
     /// </param>
-    public static SingleInstance? TryAcquire(TimeSpan waitForOwner = default)
+    public static SingleInstance? TryAcquire(TimeSpan waitForOwner = default, bool activateIfRunning = true)
     {
         var suffix = UserSuffix();
         var mutex = new Mutex(initiallyOwned: true, $@"Local\AgentSpeed.Instance.{suffix}", out var created);
@@ -34,8 +34,11 @@ internal sealed class SingleInstance : IDisposable
 
         try
         {
-            User32.AllowSetForegroundWindow(-1);
-            activate.Set();
+            if (activateIfRunning)
+            {
+                User32.AllowSetForegroundWindow(-1);
+                activate.Set();
+            }
         }
         finally
         {
@@ -94,14 +97,19 @@ internal sealed class SingleInstance : IDisposable
 
     private static string UserSuffix()
     {
+        string suffix;
         try
         {
             using var identity = WindowsIdentity.GetCurrent();
-            return identity.User?.Value ?? Environment.UserName;
+            suffix = identity.User?.Value ?? Environment.UserName;
         }
         catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException)
         {
-            return Environment.UserName;
+            suffix = Environment.UserName;
         }
+#if DEBUG
+        suffix += CodexFollowTestHooks.Suffix;
+#endif
+        return suffix;
     }
 }

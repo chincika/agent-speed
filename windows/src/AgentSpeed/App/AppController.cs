@@ -42,6 +42,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
     private readonly App _app;
     private readonly SingleInstance _instance;
     private readonly LaunchArguments _launch;
+    private readonly bool _automaticLaunch;
     private Dispatcher _ui = null!;
     private Localizer _loc = null!;
     private ThemeService _theme = null!;
@@ -81,6 +82,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
     private string? _updateDoneText;
     private bool _updateDoneShown;
     private DispatcherTimer? _dashboardTimer;
+    private CodexFollowExitMonitor? _codexFollow;
     private bool _dashboardDirty;
     private bool _tooltipShown;
     private long _lastSettingsLiveUpdate;
@@ -88,11 +90,12 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
     private bool _quitting;
     private bool _disposed;
 
-    public AppController(App app, SingleInstance instance, LaunchArguments launch)
+    public AppController(App app, SingleInstance instance, LaunchArguments launch, bool automaticLaunch)
     {
         _app = app;
         _instance = instance;
         _launch = launch;
+        _automaticLaunch = automaticLaunch;
     }
 
     private AppSettings Settings => _settings.Current;
@@ -205,6 +208,8 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         phases.Mark("monitor");
         _instance.Listen(() => _ui.BeginInvoke(() => ShowDashboard(CursorAnchor())));
         _started = true;
+        _codexFollow = new CodexFollowExitMonitor(_ui, Quit);
+        _codexFollow.SetEnabled(Settings.FollowCodex, seenRunning: _automaticLaunch);
         AppLog.Info($"Started (language {_loc.LanguageCode}, {(_theme.IsDark ? "dark" : "light")} theme). {phases}");
 
         // Off the critical path: the Fluent dictionaries (only needed by menus, the flyout and settings) and housekeeping.
@@ -462,6 +467,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         }
 
         _disposed = true;
+        Try(() => _codexFollow?.Dispose());
         Try(() => _historyStartFallback?.Stop());
         Try(() => _history?.Dispose());
         Try(() => _historyService?.Dispose());
@@ -1009,6 +1015,11 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
 
     private void OnSettingsChanged(AppSettings previous, AppSettings current)
     {
+        if (previous.FollowCodex != current.FollowCodex)
+        {
+            _codexFollow?.SetEnabled(current.FollowCodex);
+        }
+
         if (previous with { HeroLastTitle = current.HeroLastTitle } == current)
         {
             // Only the parked hero vehicle was remembered; nothing on screen depends on it.
@@ -1091,6 +1102,14 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
     /// </summary>
     private void RunTitleCaptureOperation(string op)
     {
+#if DEBUG
+        if (CodexFollowTestHooks.IsActive && op is "follow-on" or "follow-off")
+        {
+            OpenSettings("general");
+            if (_settingsModel is not null) { _settingsModel.FollowCodex = op == "follow-on"; }
+            return;
+        }
+#endif
         if (op.StartsWith("page-", StringComparison.Ordinal))
         {
             _capturePage = op[5..];

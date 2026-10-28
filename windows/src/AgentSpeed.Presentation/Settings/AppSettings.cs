@@ -75,6 +75,9 @@ public sealed record AppSettings
 
     public AppLanguage Language { get; init; } = AppLanguage.System;
 
+    /// <summary>Follow the Windows Codex desktop application's lifetime. Off for existing installations.</summary>
+    public bool FollowCodex { get; init; }
+
     public SpeedMetric Metric { get; init; } = SpeedMetric.Output;
 
     /// <summary>Redline for the output-speed metric (tok/s).</summary>

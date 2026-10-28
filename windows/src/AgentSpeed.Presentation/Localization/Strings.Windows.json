@@ -246,6 +246,24 @@
     "en": "Changes apply immediately, no restart needed.",
     "ja": "変更はすぐに反映され、再起動は不要です。"
   },
+  "win.settings.followCodex": {
+    "zh-Hant": "跟隨 Codex 啟動與退出",
+    "zh-Hans": "跟随 Codex 启动和退出",
+    "en": "Follow Codex",
+    "ja": "Codex に連動して起動・終了"
+  },
+  "win.settings.followCodex.description": {
+    "zh-Hant": "Codex 桌面版啟動時開啟，關閉後退出。登入時保留背景監測；此設定優先於登入時自動啟動。",
+    "zh-Hans": "Codex 桌面版启动时打开，关闭后退出。登录时保留后台监测；此设置优先于登录时自动启动。",
+    "en": "Open with the Codex desktop app and quit when it closes. A background watcher starts at sign-in; this takes precedence over launch at login.",
+    "ja": "Codex デスクトップ版と共に起動し、終了時に閉じます。サインイン時にバックグラウンド監視を開始し、ログイン時起動より優先します。"
+  },
+  "win.settings.followCodex.error": {
+    "zh-Hant": "無法更新 Codex 聯動設定。請檢查工作排程器和設定檔的存取權限。",
+    "zh-Hans": "无法更新 Codex 联动设置。请检查任务计划程序和设置文件的访问权限。",
+    "en": "Couldn't update Codex follow settings. Check access to Task Scheduler and the settings file.",
+    "ja": "Codex 連動設定を更新できませんでした。タスク スケジューラと設定ファイルへのアクセスを確認してください。"
+  },
   "win.settings.launchAtLogin.description": {
     "zh-Hant": "登入 Windows 後在背景開始監測。",
     "zh-Hans": "登录 Windows 后在后台开始监测。",

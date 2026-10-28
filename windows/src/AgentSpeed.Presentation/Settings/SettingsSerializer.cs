@@ -32,6 +32,7 @@ public static class SettingsSerializer
             w.WriteNumber("version", CurrentVersion);
             w.WriteString("appearance", s.Appearance.ToString());
             w.WriteString("language", s.Language.ToString());
+            w.WriteBoolean("followCodex", s.FollowCodex);
             w.WriteString("metric", s.Metric.ToString());
             w.WriteNumber("redlineOutput", s.RedlineOutput);
             w.WriteNumber("redlineTotal", s.RedlineTotal);
@@ -216,6 +217,7 @@ public static class SettingsSerializer
         {
             Appearance = ReadEnum(root, "appearance", d.Appearance),
             Language = ReadEnum(root, "language", d.Language),
+            FollowCodex = ReadBool(root, "followCodex", d.FollowCodex),
             Metric = ReadEnum<SpeedMetric>(root, "metric", d.Metric),
             RedlineOutput = ReadDouble(root, "redlineOutput", ReadDouble(root, "redline", d.RedlineOutput)),
             RedlineTotal = ReadDouble(root, "redlineTotal", d.RedlineTotal),

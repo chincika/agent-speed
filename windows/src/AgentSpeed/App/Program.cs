@@ -23,6 +23,27 @@ internal static class Program
             e.SetObserved();
         };
 
+#if DEBUG
+        if (args.Contains("--follow-test-detect", StringComparer.Ordinal))
+        {
+            return CodexDesktop.Read() switch { CodexPresence.Running => 0, CodexPresence.Absent => 1, _ => 2 };
+        }
+#endif
+
+        if (args.Contains("--follow-codex", StringComparer.Ordinal))
+        {
+#if DEBUG
+            CodexFollowTestHooks.InitializeWatcher(args);
+#endif
+            return CodexFollowWatcher.Run(args);
+        }
+
+        // The scheduled watcher owns startup in follow mode, even when ordinary login startup is also enabled.
+        if (args.Contains("--at-login", StringComparer.Ordinal) && CodexFollowSettings.Read() == true)
+        {
+            return 0;
+        }
+
         var launch = LaunchArguments.Parse(args);
         if (Environment.GetEnvironmentVariable("AGENT_SPEED_ORB_FRAMES") is { Length: > 0 } frames)
         {
@@ -36,7 +57,8 @@ internal static class Program
             return Orb.Gpu.OrbBenchHarness.Run(bench);
         }
 
-        using var instance = Acquire(launch);
+        var automaticLaunch = args.Contains("--follow-codex-ui", StringComparer.Ordinal);
+        using var instance = Acquire(launch, automaticLaunch);
         if (instance is null)
         {
             return 0;
@@ -60,7 +82,7 @@ internal static class Program
             }
         };
 
-        using var controller = new AppController(app, instance, launch);
+        using var controller = new AppController(app, instance, launch, automaticLaunch);
         app.Startup += (_, _) =>
         {
             try
@@ -82,11 +104,11 @@ internal static class Program
     /// The relaunch after an update first waits for the old process to exit, then waits for the mutex, before the
     /// usual second-instance handling applies (UPDATES section 5).
     /// </summary>
-    private static SingleInstance? Acquire(LaunchArguments launch)
+    private static SingleInstance? Acquire(LaunchArguments launch, bool automaticLaunch)
     {
         if (launch.WaitPid is not { } pid)
         {
-            return SingleInstance.TryAcquire();
+            return SingleInstance.TryAcquire(activateIfRunning: !automaticLaunch);
         }
 
         var exited = UpdateRelaunch.WaitForExit(pid);

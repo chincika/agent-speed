@@ -15,6 +15,7 @@ public class SettingsSerializerTests
         {
             Appearance = AppearanceMode.Dark,
             Language = AppLanguage.Ja,
+            FollowCodex = true,
             Metric = SpeedMetric.Total,
             RedlineOutput = 750,
             ShowOnTaskbar = false,

@@ -56,6 +56,9 @@ internal static class AutoStart
     /// <summary>Keeps an existing entry pointing at the running executable (after an update or a move).</summary>
     public static void Refresh()
     {
+#if DEBUG
+        if (CodexFollowTestHooks.IsActive) { return; }
+#endif
         try
         {
             using var key = Registry.CurrentUser.OpenSubKey(RunKey, writable: true);
@@ -83,6 +86,6 @@ internal static class AutoStart
             return null;
         }
 
-        return $"\"{path}\"";
+        return $"\"{path}\" --at-login";
     }
 }
