@@ -5,6 +5,7 @@ using AgentSpeed.Core.IO;
 using AgentSpeed.Core.Omp;
 using AgentSpeed.Core.OpenCode;
 using AgentSpeed.Core.Parsing;
+using AgentSpeed.Core.Pi;
 using AgentSpeed.Core.Pricing;
 using AgentSpeed.Core.WorkBuddy;
 
@@ -28,6 +29,15 @@ internal sealed partial class MonitorCore : IDisposable
     public const long LargeFileTailBytes = 64L * 1024 * 1024;
     public const long RecentWriteWindowMs = 2 * 60_000;
 
+    /// <summary>
+    /// The startup backlog's files read ahead of the one being applied stay under this many bytes (one file at least):
+    /// a read file holds its extracted lines and task lines until it is applied in startup order.
+    /// </summary>
+    private const long MaxBacklogBytesInFlight = 256L * 1024 * 1024;
+
+    /// <summary>From this much to read at once, the startup backlog is read with blocking garbage collections.</summary>
+    private const long LargeBacklogBytes = 64L * 1024 * 1024;
+
     /// <summary>A conversation database that keeps changing is read at most this often (METRICS 5.4).</summary>
     public static readonly TimeSpan DatabaseReadInterval = TimeSpan.FromMilliseconds(500);
 
@@ -49,12 +59,18 @@ internal sealed partial class MonitorCore : IDisposable
     private readonly OpenCodeSource? _openCode;
     private readonly AntigravityConnections _connections = new();
     private readonly bool _ompAutomatic;
+    private readonly bool _piAutomatic;
     private bool _openCodeSeeded;
     private bool _linksChanged;
     private long _removedMalformedLines;
     private long _removedOversizedLines;
     private int _responsesSeen;
     private bool _partialHistory;
+    private long? _observedAtMs;
+    private bool _keepEveryTask;
+    private IReadOnlyDictionary<SourceKind, Tasks.TaskModels> _taskModels = new Dictionary<SourceKind, Tasks.TaskModels>();
+    private readonly Tasks.TaskWatchContext _taskWatch;
+    private long _seededFiles;
 
     public MonitorCore(
         MonitorConfiguration configuration,
@@ -78,6 +94,7 @@ internal sealed partial class MonitorCore : IDisposable
         _enabled = configuration.EnabledSources;
         _enabledSet = SourceSet.From(_enabled);
         _observer = observer;
+        _taskWatch = new Tasks.TaskWatchContext(() => Clock());
         _engine = new SpeedEngine(todayStartMs, pricing, zone);
         foreach (var (family, path) in locations.FileRoots())
         {
@@ -94,9 +111,19 @@ internal sealed partial class MonitorCore : IDisposable
         }
 
         InitializeZCode(locations);
+        InitializeOpenClaw(locations);
+        InitializeHermes(locations, zone);
         OpenCodeRootPath = locations.OpenCodeRoot;
         _ompAutomatic = locations.OmpAutomatic;
+        _piAutomatic = locations.PiAutomatic;
         RefreshAvailability();
+    }
+
+    /// <summary>Live reporting's task watch (METRICS 11.10), as last published; the monitor thread sets it before reading.</summary>
+    internal Reporting.ReportTaskWatch TaskWatch
+    {
+        get => _taskWatch.Watch;
+        set => _taskWatch.Watch = value ?? Reporting.ReportTaskWatch.Off;
     }
 
     public SourceRoot CodexRoot { get; }
@@ -129,14 +156,29 @@ internal sealed partial class MonitorCore : IDisposable
     /// <summary>The live clock for live reporting's counting rule (METRICS 11.4); tests replace it.</summary>
     internal Func<long> Clock { get; set; } = static () => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
+    /// <summary>Live reporting's monotonic clock, which keeps counting while the computer sleeps (METRICS 11.9); tests replace it.</summary>
+    internal Func<long> MonotonicClock { get; set; } = static () => Environment.TickCount64;
+
+    /// <summary>Pi's automatic roots as rediscovery reads them again (METRICS 4.13); tests replace it.</summary>
+    internal Func<IReadOnlyList<string>> AutomaticPiRoots { get; set; } = static () => LiveMonitor.DefaultPiRoots;
+
+    /// <summary>
+    /// A new Pi root covers a folder read as omp so far: its files must count once, as Pi, so the session starts over
+    /// with freshly resolved roots instead of moving them (today's omp responses would stay counted).
+    /// </summary>
+    public bool RestartRequested { get; private set; }
+
     /// <summary>Transcript roots (file families).</summary>
     public IReadOnlyList<SourceRoot> Roots => _roots;
 
     /// <summary>Every folder a file watcher should observe, including the OpenCode database folder.</summary>
     public IEnumerable<SourceRoot> WatchRoots => (_zcodeRoot is { } zcode ? _roots.Append(zcode) : _roots)
-        .Concat(OpenCodeRoot is { } openCode ? [openCode] : []);
+        .Concat(OpenCodeRoot is { } openCode ? [openCode] : [])
+        .Concat(_openClawWatchRoots)
+        .Concat(_hermesWatchRoots);
 
-    public bool AnyEnabledRootAvailable => _roots.Any(r => r.Enabled && r.Available) || OpenCodeRoot?.Available == true || _zcodeRoot?.Available == true;
+    public bool AnyEnabledRootAvailable => _roots.Any(r => r.Enabled && r.Available) || OpenCodeRoot?.Available == true
+        || _zcodeRoot?.Available == true || _openClaw?.Available == true || _hermes?.Available == true;
 
     public int TrackedFileCount => _files.Count;
 
@@ -149,6 +191,8 @@ internal sealed partial class MonitorCore : IDisposable
     public void RefreshAvailability()
     {
         RefreshZCodeAvailability();
+        RefreshOpenClawWatchRoots();
+        RefreshHermesWatchRoots();
         foreach (var root in _roots)
         {
             root.Available = SafeDirectoryExists(root.DetectionPath);
@@ -203,9 +247,12 @@ internal sealed partial class MonitorCore : IDisposable
 
             try
             {
-                var prepared = read.Task.GetAwaiter().GetResult();
-                changed |= TryCommit(tracked, prepared, seeded: false)
-                    && (prepared.Result.BytesRead > 0 || prepared.Result.WasReset);
+                var (prepared, began) = read.Task.GetAwaiter().GetResult();
+                if (TryCommit(tracked, prepared, seeded: false) && (prepared.Result.BytesRead > 0 || prepared.Result.WasReset))
+                {
+                    Observe(began);
+                    changed = true;
+                }
             }
             catch (OperationCanceledException)
             {
@@ -255,7 +302,7 @@ internal sealed partial class MonitorCore : IDisposable
                     continue;
                 }
 
-                var tracked = new TrackedFile(root, file.Path, _deduper);
+                var tracked = NewTrackedFile(root, file.Path);
                 _files[file.Path] = tracked;
                 if (PlanInitialRead(tracked, file, todayStartMs) is { } plan)
                 {
@@ -266,7 +313,28 @@ internal sealed partial class MonitorCore : IDisposable
             root.Seeded = true;
         }
 
-        var (filesRead, bytesRead) = ReadPlans(plans, seeded: true, cancellationToken, progress);
+        // A large backlog allocates fast on several threads for a few seconds: blocking collections that compact keep its
+        // short-lived objects from piling up in the background collector's older generations (lower peak memory).
+        var latency = System.Runtime.GCSettings.LatencyMode;
+        var large = plans.Sum(PlanBytes) >= LargeBacklogBytes;
+        if (large)
+        {
+            System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.Batch;
+        }
+
+        int filesRead;
+        long bytesRead;
+        try
+        {
+            (filesRead, bytesRead) = ReadPlans(plans, seeded: true, cancellationToken, progress);
+        }
+        finally
+        {
+            if (large)
+            {
+                System.Runtime.GCSettings.LatencyMode = latency;
+            }
+        }
         if (_openCode is { } openCode && !_openCodeSeeded)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -287,18 +355,30 @@ internal sealed partial class MonitorCore : IDisposable
         }
 
         SeedZCode(todayStartMs);
+        SeedOpenClaw(todayStartMs, cancellationToken, ref discovered, ref filesRead, ref bytesRead);
+        SeedHermes(todayStartMs, cancellationToken, ref discovered, ref filesRead, ref bytesRead);
         return new SeedReport(stopwatch.ElapsedMilliseconds, discovered, filesRead, bytesRead, _responsesSeen);
     }
 
     /// <summary>Handles paths reported by a watcher. Returns true when anything was read.</summary>
     public bool ProcessPaths(IEnumerable<string> paths, long nowMs, long todayStartMs)
     {
+        var began = MonotonicClock();
+        return Observed(began, ProcessPathsCore(paths, todayStartMs));
+    }
+
+    private bool ProcessPathsCore(IEnumerable<string> paths, long todayStartMs)
+    {
         var changed = false;
         var openCodeChanged = false;
         var zcodeChanged = false;
+        var openClawChanged = false;
+        var openClawNew = false;
+        var hermesChanged = false;
         foreach (var incoming in paths)
         {
             var path = incoming;
+            path = DroidTranscriptOf(path);
             if (Path.GetFileName(path) == "summary.json")
             {
                 var updates = Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, "updates.jsonl");
@@ -316,6 +396,19 @@ internal sealed partial class MonitorCore : IDisposable
             if (_openCode?.IsWatchedPath(path) == true)
             {
                 openCodeChanged = true;
+                continue;
+            }
+
+            if (_openClaw?.IsWatchedPath(path) == true)
+            {
+                openClawChanged = true;
+                openClawNew |= !_openClaw.IsTracked(path);
+                continue;
+            }
+
+            if (_hermes?.IsWatchedPath(path) == true)
+            {
+                hermesChanged = true;
                 continue;
             }
 
@@ -355,15 +448,33 @@ internal sealed partial class MonitorCore : IDisposable
             changed |= ApplyOpenCode(openCode.Refresh(), seeded: false);
         }
 
+        if (openClawChanged)
+        {
+            changed |= RefreshOpenClaw(discover: openClawNew);
+        }
+
+        if (hermesChanged)
+        {
+            changed |= RefreshHermes(discover: false);
+        }
+
         return changed;
     }
 
     /// <summary>1-second fallback: stats files modified in the last 2 minutes.</summary>
     public bool PollRecent(long nowMs)
     {
+        var began = MonotonicClock();
+        return Observed(began, PollRecentCore(nowMs));
+    }
+
+    private bool PollRecentCore(long nowMs)
+    {
         var cutoff = DateTime.UnixEpoch.AddMilliseconds(nowMs - RecentWriteWindowMs);
         var changed = _openCodeSeeded && _openCode?.RefreshIfChanged() is { } update && ApplyOpenCode(update, seeded: false);
         changed |= _zcodeSeeded && RefreshZCode();
+        changed |= RefreshOpenClaw(discover: false);
+        changed |= RefreshHermes(discover: false);
         _connections.CloseIdle();
         List<TrackedFile>? due = null;
         foreach (var tracked in _files.Values)
@@ -398,6 +509,12 @@ internal sealed partial class MonitorCore : IDisposable
     /// <summary>10-second full rediscovery; also seeds roots that appeared after startup.</summary>
     public bool Rediscover(long nowMs, long todayStartMs, CancellationToken cancellationToken)
     {
+        var began = MonotonicClock();
+        return Observed(began, RediscoverCore(nowMs, todayStartMs, cancellationToken));
+    }
+
+    private bool RediscoverCore(long nowMs, long todayStartMs, CancellationToken cancellationToken)
+    {
         var changed = false;
         if (_openCode is { } openCode && _openCodeSeeded)
         {
@@ -414,7 +531,37 @@ internal sealed partial class MonitorCore : IDisposable
             changed |= RefreshZCode();
         }
 
+        AddNewPiRoots();
+        if (RestartRequested)
+        {
+            return changed;
+        }
+
         AddNewOmpRoots();
+        AddNewCodexHomeRoots();
+        RefreshOpenClawWatchRoots();
+        if (_openClaw is not null && !_openClawSeeded && _openClaw.Available)
+        {
+            var (discovered, filesRead, bytesRead) = (0, 0, 0L);
+            SeedOpenClaw(todayStartMs, cancellationToken, ref discovered, ref filesRead, ref bytesRead);
+            changed = true;
+        }
+        else
+        {
+            changed |= RefreshOpenClaw(discover: true);
+        }
+
+        if (_hermes is not null && !_hermesSeeded && _hermes.Available)
+        {
+            var (discovered, filesRead, bytesRead) = (0, 0, 0L);
+            SeedHermes(todayStartMs, cancellationToken, ref discovered, ref filesRead, ref bytesRead);
+            changed = true;
+        }
+        else
+        {
+            changed |= RefreshHermes(discover: true);
+        }
+
         foreach (var root in _roots.ToList())
         {
             if (!root.Enabled)
@@ -474,7 +621,17 @@ internal sealed partial class MonitorCore : IDisposable
             return _zcode?.ActiveSessionCount(todayStartMs) ?? 0;
         }
 
-        var mainOnly = WorkBuddyPaths.IsWorkBuddy(kind) || kind is SourceKind.Kimi or SourceKind.GrokBuild;
+        if (kind == SourceKind.OpenClaw)
+        {
+            return _openClaw?.ActiveSessionCount(todayStartMs) ?? 0;
+        }
+
+        if (kind == SourceKind.Hermes)
+        {
+            return _hermes?.ActiveSessionCount(todayStartMs) ?? 0;
+        }
+
+        var mainOnly = WorkBuddyPaths.IsWorkBuddy(kind) || kind is SourceKind.Kimi or SourceKind.GrokBuild or SourceKind.Pi or SourceKind.Droid;
         var count = 0;
         foreach (var tracked in _files.Values)
         {
@@ -528,16 +685,23 @@ internal sealed partial class MonitorCore : IDisposable
             warnings.Add(new MonitorWarning.UnsupportedFormat(SourceKind.Antigravity));
         }
 
+        if (_openClaw?.Unsupported == true)
+        {
+            warnings.Add(new MonitorWarning.UnsupportedFormat(SourceKind.OpenClaw));
+        }
+
         return warnings;
     }
 
     public long MalformedLineCount =>
-        _removedMalformedLines + _files.Values.Sum(f => f.Parser.MalformedLines) + (_openCode?.MalformedRows ?? 0);
+        _removedMalformedLines + _files.Values.Sum(f => f.Parser.MalformedLines) + (_openCode?.MalformedRows ?? 0)
+        + (_openClaw?.MalformedLines ?? 0) + (_hermes?.MalformedLines ?? 0);
 
-    public long OversizedLineCount => _removedOversizedLines + _files.Values.Sum(f => f.Tailer.OversizedLines);
+    public long OversizedLineCount => _removedOversizedLines + _files.Values.Sum(f => f.Tailer.OversizedLines) + (_hermes?.OversizedLines ?? 0);
 
     public int UnreadableFileCount =>
-        _files.Values.Count(f => f.Unreadable) + (_openCode?.Status == OpenCodeStatus.Unreadable ? 1 : 0) + (_zcode?.Unreadable == true ? 1 : 0);
+        _files.Values.Count(f => f.Unreadable) + (_openCode?.Status == OpenCodeStatus.Unreadable ? 1 : 0) + (_zcode?.Unreadable == true ? 1 : 0)
+        + (_openClaw?.UnreadableCount ?? 0) + (_hermes?.UnreadableCount ?? 0);
 
     public bool PartialHistory => _partialHistory;
 
@@ -546,6 +710,8 @@ internal sealed partial class MonitorCore : IDisposable
         long nowMs, long todayStartMs, MonitorState state, bool observeLive, IReadOnlyCollection<SourceSet>? subsets = null)
     {
         ResolveParents();
+        _taskWatch.Tick(nowMs);
+        _engine.CountTasks(_taskWatch.TakeCompletions(), _taskWatch.Watch);
         var frame = _engine.Compute(nowMs, todayStartMs, observeLive);
         var agents = frame.Agents
             .Select(a => new AgentStatus(
@@ -558,11 +724,11 @@ internal sealed partial class MonitorCore : IDisposable
                 a.Live,
                 a.RecentSpeed,
                 UnixTime.FromMs(a.Info.LastLineMs ?? nowMs),
-                a.ParentId) { LiveCost = a.LiveCost, Modes = a.Info.Modes })
+                a.ParentId) { Modes = a.Info.Modes, Intelligence = a.Intelligence, Task = a.Info.Task, Work = a.Work })
             .ToList();
 
         var sources = Enum.GetValues<SourceKind>()
-            .Select(kind => WithCost(
+            .Select(kind => WithEngineSums(
                 BuildSourceStatus(kind, todayStartMs, frame.SourceLive[(int)kind],
                     frame.SourceToday[(int)kind], agents.Count(a => a.Source == kind && a.Phase == AgentPhase.Generating),
                     frame.SourceLiveEstimated[(int)kind]),
@@ -592,12 +758,27 @@ internal sealed partial class MonitorCore : IDisposable
             TodayCost = frame.TodayCost,
             Report = frame.Report,
             TodayModes = frame.TodayModes,
+            ObservedAtMs = _observedAtMs,
         };
+        _observedAtMs = null;
         return (snapshot, frame.Events);
     }
 
-    /// <summary>A disabled source carries no cost, like its tokens.</summary>
-    private static SourceStatus WithCost(SourceStatus status, EngineFrame frame)
+    /// <summary>A read that began at <paramref name="began"/> changed the engine: the next snapshot keeps the earliest such time.</summary>
+    private void Observe(long began) => _observedAtMs = _observedAtMs is { } earliest ? Math.Min(earliest, began) : began;
+
+    private bool Observed(long began, bool changed)
+    {
+        if (changed)
+        {
+            Observe(began);
+        }
+
+        return changed;
+    }
+
+    /// <summary>A disabled source carries no cost or intelligence, like its tokens.</summary>
+    private static SourceStatus WithEngineSums(SourceStatus status, EngineFrame frame)
     {
         var index = (int)status.Kind;
         return !status.Enabled || frame.SourceLiveCost.Length <= index ? status : status with
@@ -605,6 +786,8 @@ internal sealed partial class MonitorCore : IDisposable
             LiveCost = frame.SourceLiveCost[index],
             TodayCost = frame.SourceTodayCost[index],
             UnpricedModels = frame.SourceUnpricedModels[index],
+            UnpricedFacts = frame.SourceUnpricedFacts[index],
+            Intelligence = frame.SourceIntelligence[index],
             TodayModes = frame.TodayModes.Where(m => m.Source == status.Kind).ToArray(),
         };
     }
@@ -648,6 +831,16 @@ internal sealed partial class MonitorCore : IDisposable
             available = _zcodeRoot?.Available ?? File.Exists(ZCode.ZCodeDatabase.DatabasePath(_zcodeRootPath));
             rootEnabled = _zcodeRoot is not null;
         }
+        else if (kind == SourceKind.OpenClaw)
+        {
+            (path, available) = OpenClawStatus();
+            rootEnabled = _openClaw is not null;
+        }
+        else if (kind == SourceKind.Hermes)
+        {
+            (path, available) = HermesStatus();
+            rootEnabled = _hermes is not null;
+        }
         else if (kind == SourceKind.OpenCode)
         {
             path = OpenCodeRootPath;
@@ -683,6 +876,11 @@ internal sealed partial class MonitorCore : IDisposable
         var modifiedMs = new DateTimeOffset(DateTime.SpecifyKind(file.LastWriteUtc, DateTimeKind.Utc)).ToUnixTimeMilliseconds();
         if (modifiedMs < todayStartMs - BacklogWindowMs)
         {
+            if (tracked.Parser is Droid.DroidParser droid)
+            {
+                return PlanDroidAtEnd(tracked, droid, file);
+            }
+
             StartAtEnd(tracked, file);
             return null;
         }
@@ -739,7 +937,9 @@ internal sealed partial class MonitorCore : IDisposable
 
         var totalBytes = Math.Max(1, plans.Sum(p => Math.Max(0, p.ExpectedLength - p.StartOffset)));
         var degree = Math.Clamp(Environment.ProcessorCount - 1, 1, 8);
+
         var inFlight = new Queue<(ReadPlan Plan, Task<Prepared> Task)>();
+        long inFlightBytes = 0;
         long doneBytes = 0, bytesRead = 0;
         var filesRead = 0;
         var next = 0;
@@ -748,14 +948,17 @@ internal sealed partial class MonitorCore : IDisposable
             while (next < plans.Count || inFlight.Count > 0)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                while (next < plans.Count && inFlight.Count < degree)
+                while (next < plans.Count && inFlight.Count < degree
+                       && (inFlight.Count == 0 || inFlightBytes + PlanBytes(plans[next]) <= MaxBacklogBytesInFlight))
                 {
                     var plan = plans[next++];
+                    inFlightBytes += PlanBytes(plan);
                     plan.File.Tailer.StartAt(plan.StartOffset, plan.Align);
                     inFlight.Enqueue((plan, Task.Run(() => Prepare(plan.File, cancellationToken), cancellationToken)));
                 }
 
                 var (current, task) = inFlight.Dequeue();
+                inFlightBytes -= PlanBytes(current);
                 Prepared prepared;
                 try
                 {
@@ -771,11 +974,12 @@ internal sealed partial class MonitorCore : IDisposable
                     continue;
                 }
 
-                if (!TryCommit(current.File, prepared, seeded))
+                if (!TryCommit(current.File, prepared, seeded) || !current.Counted)
                 {
                     continue;
                 }
 
+                current.File.SeedOrder ??= ++_seededFiles;
                 filesRead++;
                 bytesRead += prepared.Result.BytesRead;
                 doneBytes += Math.Max(0, current.ExpectedLength - current.StartOffset);
@@ -798,6 +1002,8 @@ internal sealed partial class MonitorCore : IDisposable
 
         return (filesRead, bytesRead);
     }
+
+    private static long PlanBytes(ReadPlan plan) => Math.Max(0, plan.ExpectedLength - plan.StartOffset);
 
     private static Prepared Prepare(TrackedFile tracked, CancellationToken cancellationToken)
     {
@@ -830,7 +1036,21 @@ internal sealed partial class MonitorCore : IDisposable
         }
 
         _collector.Items.Clear();
-        prepared.Batch.ApplyTo(_collector);
+        _taskWatch.Seeding = seeded;
+        try
+        {
+            prepared.Batch.ApplyTo(_collector);
+        }
+        finally
+        {
+            _taskWatch.Seeding = false;
+        }
+
+        if (seeded)
+        {
+            tracked.Parser.ForgetWork();
+        }
+
         _partialHistory |= tracked.Tailer is DocumentTailer { Oversized: true } || tracked.Parser is GrokBuild.GrokParser { PendingOverflow: true };
         tracked.KnownLength = prepared.Result.Length;
         tracked.KnownWriteUtc = prepared.Result.LastWriteUtc;
@@ -907,10 +1127,12 @@ internal sealed partial class MonitorCore : IDisposable
 
         var token = _backgroundStop.Token;
         var before = BeforeBackgroundRead;
+        var clock = MonotonicClock;
         var task = Task.Run(() =>
         {
             before?.Invoke(tracked.Path);
-            return Prepare(tracked, token);
+            var began = clock();
+            return (Prepare(tracked, token), began);
         }, token);
         _wholeReads[tracked] = new BackgroundRead(task);
         task.ContinueWith(
@@ -944,7 +1166,7 @@ internal sealed partial class MonitorCore : IDisposable
             return false;
         }
 
-        var tracked = new TrackedFile(root, file.Path, _deduper);
+        var tracked = NewTrackedFile(root, file.Path);
         _files[file.Path] = tracked;
         if (PlanInitialRead(tracked, file, todayStartMs) is not { } plan)
         {
@@ -971,6 +1193,7 @@ internal sealed partial class MonitorCore : IDisposable
 
         if (!_enabled.Contains(parser.Source))
         {
+            _taskWatch.Forget(parser.AgentId);
             _engine.RemoveAgent(parser.AgentId);
             _linksChanged |= _links.Remove(parser.AgentId);
             return;
@@ -992,8 +1215,39 @@ internal sealed partial class MonitorCore : IDisposable
             parser.Phase,
             parser.InFlightStartMs,
             parser.LastLineMs,
-            _parents.GetValueOrDefault(parser.AgentId)) { Modes = parser.Modes });
+            _parents.GetValueOrDefault(parser.AgentId)) { Modes = parser.Modes, Work = parser.WorkActions, Task = TaskStatusOf(parser) });
     }
+
+    /// <summary>
+    /// The coefficients the predictions of each scored source use (METRICS 6.11 <i>Calibration</i>, from the history);
+    /// a source without an entry uses the priors. Every scored agent is evaluated again with the new models.
+    /// </summary>
+    internal void SetTaskModels(IReadOnlyDictionary<SourceKind, Tasks.TaskModels> models)
+    {
+        ArgumentNullException.ThrowIfNull(models);
+        if (ReferenceEquals(models, _taskModels))
+        {
+            return;
+        }
+
+        _taskModels = models;
+        foreach (var tracked in _files.Values)
+        {
+            if (tracked.Parser.Tasks is not null)
+            {
+                tracked.PushedVersion = -1;
+                PushAgent(tracked);
+            }
+        }
+
+        RepushOpenClawAgents();
+    }
+
+    /// <summary>The agent's current task, evaluated over everything read (METRICS 6.9 <i>Event stream</i>).</summary>
+    private Tasks.AgentTaskStatus? TaskStatusOf(TranscriptParser parser) =>
+        parser.Tasks is { } tasks
+            ? Tasks.AgentTaskStatus.Of(tasks.Events, _taskModels.GetValueOrDefault(parser.Source) ?? Tasks.TaskModels.Prior)
+            : null;
 
     /// <summary>Applies one read of the OpenCode database; true when anything changed.</summary>
     private bool ApplyOpenCode(OpenCodeUpdate update, bool seeded)
@@ -1053,6 +1307,50 @@ internal sealed partial class MonitorCore : IDisposable
     private static string? DisplayProject(TranscriptParser parser) =>
         parser is AntigravityParser ? AntigravityPaths.StoreNameOf(parser.AgentId) : null;
 
+    /// <summary>
+    /// Keep every task's events instead of each agent's current task (the probe's dumps evaluate at any instant); set
+    /// before seeding.
+    /// </summary>
+    internal bool KeepEveryTask
+    {
+        get => _keepEveryTask;
+        set
+        {
+            _keepEveryTask = value;
+            if (_openClaw is { } openClaw)
+            {
+                openClaw.KeepEveryTask = value;
+            }
+        }
+    }
+
+    /// <summary>
+    /// The transcripts of the sources with a task score (METRICS 6.9) that seeding read, in startup order, with their
+    /// composers: the seeded agents of <c>--dump-today</c>. Files seeding started at the end of are left out, and so are
+    /// OpenClaw windows, which the dump reads whole per database like the reference.
+    /// </summary>
+    internal IEnumerable<TranscriptParser> TaskAgents =>
+        _files.Values.Where(f => f.SeedOrder is not null && f.Parser.Tasks is not null).OrderBy(f => f.SeedOrder).Select(f => f.Parser);
+
+    /// <summary>An agent's parent link (METRICS 6.7) as last resolved; null for none.</summary>
+    internal string? ParentOf(string agentId)
+    {
+        ResolveParents();
+        return _parents.GetValueOrDefault(agentId);
+    }
+
+    private TrackedFile NewTrackedFile(SourceRoot root, string path)
+    {
+        var tracked = new TrackedFile(root, path, _deduper);
+        tracked.Parser.TaskWatch = _taskWatch;
+        if (_keepEveryTask)
+        {
+            tracked.Parser.KeepEveryTask();
+        }
+
+        return tracked;
+    }
+
     /// <summary>Re-resolves parent links over the engine's agents after any of them changed (METRICS 6.7).</summary>
     private void ResolveParents()
     {
@@ -1104,6 +1402,7 @@ internal sealed partial class MonitorCore : IDisposable
 
             _removedMalformedLines += tracked.Parser.MalformedLines;
             _removedOversizedLines += tracked.Tailer.OversizedLines;
+            _taskWatch.Forget(tracked.Parser.AgentId);
             _engine.RemoveAgent(tracked.Parser.AgentId);
             _linksChanged |= _links.Remove(tracked.Parser.AgentId);
         }
@@ -1120,8 +1419,12 @@ internal sealed partial class MonitorCore : IDisposable
         try
         {
             var info = new FileInfo(tracked.Path);
-            return info.Exists ? (info.Length, tracked.Parser is GrokBuild.GrokParser
-                ? GrokBuild.GrokFiles.Modified(tracked.Path, info.LastWriteTimeUtc) : info.LastWriteTimeUtc) : null;
+            return info.Exists ? (info.Length, tracked.Parser switch
+            {
+                GrokBuild.GrokParser => GrokBuild.GrokFiles.Modified(tracked.Path, info.LastWriteTimeUtc),
+                Droid.DroidParser => Droid.DroidPaths.Modified(tracked.Path, info.LastWriteTimeUtc),
+                _ => info.LastWriteTimeUtc,
+            }) : null;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException)
         {
@@ -1138,12 +1441,45 @@ internal sealed partial class MonitorCore : IDisposable
         }
 
         var known = new HashSet<string>(_roots.Where(r => r.Family == RootFamily.Omp).Select(r => r.Path), PathComparer);
-        foreach (var path in SourceLocations.NormalizeAll(LiveMonitor.DefaultOmpRoots))
+        var pi = _roots.Where(r => r.Family == RootFamily.Pi).Select(r => r.Path).ToList();
+        foreach (var path in PiPaths.WithoutPi(SourceLocations.NormalizeAll(LiveMonitor.DefaultOmpRoots), pi))
         {
             if (known.Add(path))
             {
                 _roots.Add(new SourceRoot(RootFamily.Omp, path, enabled: true));
             }
+        }
+    }
+
+    /// <summary>
+    /// Automatic Pi roots follow Pi's settings (METRICS 4.13): a custom session folder set while running is read from then
+    /// on, and an omp root that became Pi's stops being read as omp (METRICS 4.7), also while Pi is turned off.
+    /// </summary>
+    private void AddNewPiRoots()
+    {
+        if (!_piAutomatic)
+        {
+            return;
+        }
+
+        var known = new HashSet<string>(_roots.Where(r => r.Family == RootFamily.Pi).Select(r => r.Path), PathComparer);
+        var added = SourceLocations.NormalizeAll(AutomaticPiRoots()).Where(known.Add).ToList();
+        if (added.Count == 0)
+        {
+            return;
+        }
+
+        var omp = _roots.Where(r => r.Family == RootFamily.Omp).Select(r => r.Path).ToList();
+        if (PiPaths.WithoutPi(omp, added).Count < omp.Count)
+        {
+            RestartRequested = true;
+            return;
+        }
+
+        var enabled = Families.IsEnabled(RootFamily.Pi, _enabled);
+        foreach (var path in added)
+        {
+            _roots.Add(new SourceRoot(RootFamily.Pi, path, enabled));
         }
     }
 
@@ -1171,14 +1507,16 @@ internal sealed partial class MonitorCore : IDisposable
         }
     }
 
+    /// <param name="Counted">False for a read that only takes a baseline (Factory Droid's sidecar), not counted as a file read.</param>
     private readonly record struct ReadPlan(
-        TrackedFile File, DateTime LastWriteUtc, long StartOffset, StartAlignment Align, long ExpectedLength);
+        TrackedFile File, DateTime LastWriteUtc, long StartOffset, StartAlignment Align, long ExpectedLength, bool Counted = true);
 
     private readonly record struct Prepared(ILineBatch Batch, TailReadResult Result);
 
-    private sealed class BackgroundRead(Task<Prepared> task)
+    /// <param name="task">The read and the monotonic time it began.</param>
+    private sealed class BackgroundRead(Task<(Prepared Prepared, long Began)> task)
     {
-        public Task<Prepared> Task { get; } = task;
+        public Task<(Prepared Prepared, long Began)> Task { get; } = task;
 
         /// <summary>The file changed again while it was being read.</summary>
         public bool Again { get; set; }

@@ -76,6 +76,7 @@ internal sealed class GpuOrbWindow : IOrbWindow, IOrbHostInput
     private DispatcherTimer? _hintTimer;
     private System.Windows.Controls.ToolTip? _hint;
     private string _unitHint = string.Empty;
+    private string? _discHint;
     private bool _unitHover;
 
     public GpuOrbWindow(string orbId, Func<double> clock, OrbClock orbClock, uint seed, GpuDevice device)
@@ -237,6 +238,20 @@ internal sealed class GpuOrbWindow : IOrbWindow, IOrbHostInput
 
     public void SetUnitHint(string hint) => _unitHint = hint;
 
+    public void SetDiscHint(string? hint)
+    {
+        if (_discHint == hint)
+        {
+            return;
+        }
+
+        _discHint = hint;
+        if (_hint is { IsOpen: true } && !_unitHover)
+        {
+            ShowHint();
+        }
+    }
+
     public void Announce(string text) => _automation.Announce(text);
 
     public void SetLanguage(XmlLanguage language)
@@ -391,11 +406,13 @@ internal sealed class GpuOrbWindow : IOrbWindow, IOrbHostInput
 
         UpdateHover(x, y);
         SetUnitHover(IsOnUnit(x, y));
+        ScheduleHint();
     }
 
     public void OnMouseLeave()
     {
         SetUnitHover(false);
+        HideHint();
         if (!_dragging)
         {
             SetDiscHover(false);
@@ -459,7 +476,7 @@ internal sealed class GpuOrbWindow : IOrbWindow, IOrbHostInput
         }
     }
 
-    /// <summary>The unit's hover affordance, and its hint tooltip after 0.8 s (DESIGN 9 Switching).</summary>
+    /// <summary>The unit's hover affordance (DESIGN 9 Switching); entering or leaving the unit restarts the hint.</summary>
     private void SetUnitHover(bool hovering)
     {
         if (_unitHover == hovering)
@@ -469,18 +486,15 @@ internal sealed class GpuOrbWindow : IOrbWindow, IOrbHostInput
 
         _unitHover = hovering;
         _surface.SetUnitHover(hovering);
-        if (!hovering)
-        {
-            _hintTimer?.Stop();
-            if (_hint is not null)
-            {
-                _hint.IsOpen = false;
-            }
+        HideHint();
+    }
 
-            return;
-        }
+    /// <summary>The hover hint of what is under the cursor: the unit's, else the disc's, shown after 0.8 s.</summary>
+    private string? HintText => _unitHover ? _unitHint : _discHover && !_dragging ? _discHint : null;
 
-        if (string.IsNullOrEmpty(_unitHint))
+    private void ScheduleHint()
+    {
+        if (string.IsNullOrEmpty(HintText) || _hint is { IsOpen: true } || _hintTimer is { IsEnabled: true })
         {
             return;
         }
@@ -488,15 +502,34 @@ internal sealed class GpuOrbWindow : IOrbWindow, IOrbHostInput
         _hintTimer ??= new DispatcherTimer(TimeSpan.FromSeconds(OrbUnitToggle.HintDelay), DispatcherPriority.Input, (_, _) =>
         {
             _hintTimer!.Stop();
-            if (_unitHover && !_closed)
+            if (!_closed)
             {
-                _hint ??= new System.Windows.Controls.ToolTip { Placement = System.Windows.Controls.Primitives.PlacementMode.Mouse };
-                _hint.Content = _unitHint;
-                _hint.IsOpen = true;
+                ShowHint();
             }
         }, Dispatcher.CurrentDispatcher);
-        _hintTimer.Stop();
         _hintTimer.Start();
+    }
+
+    private void ShowHint()
+    {
+        if (string.IsNullOrEmpty(HintText))
+        {
+            HideHint();
+            return;
+        }
+
+        _hint ??= new System.Windows.Controls.ToolTip { Placement = System.Windows.Controls.Primitives.PlacementMode.Mouse };
+        _hint.Content = HintText;
+        _hint.IsOpen = true;
+    }
+
+    private void HideHint()
+    {
+        _hintTimer?.Stop();
+        if (_hint is not null)
+        {
+            _hint.IsOpen = false;
+        }
     }
 
     public void OnRightUp(int x, int y)
@@ -567,6 +600,7 @@ internal sealed class GpuOrbWindow : IOrbWindow, IOrbHostInput
         }
 
         StopMove();
+        HideHint();
         _dragging = true;
         _dragMoved = false;
         _dragStartCursor = cursor;
@@ -720,6 +754,11 @@ internal sealed class GpuOrbWindow : IOrbWindow, IOrbHostInput
         if (_discHover != hovering)
         {
             _discHover = hovering;
+            if (!hovering)
+            {
+                HideHint();
+            }
+
             ApplyHover();
         }
     }

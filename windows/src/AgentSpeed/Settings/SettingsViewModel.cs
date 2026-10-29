@@ -172,6 +172,19 @@ internal sealed class SettingsViewModel : ObservableObject
         ChangeGrokBuildCommand = new RelayCommand(() => ChangeFolder(GrokBuildPath, (s, path) => s with { GrokBuildRoot = path }));
         ResetGrokBuildCommand = new RelayCommand(() => _settings.Update(s => s with { GrokBuildRoot = null }),
             () => _settings.Current.GrokBuildRoot is not null);
+        ChangePiCommand = new RelayCommand(() => ChangeFolder(PiPath, (s, path) => s with { PiRoot = path }));
+        ResetPiCommand = new RelayCommand(() => _settings.Update(s => s with { PiRoot = null }), () => _settings.Current.PiRoot is not null);
+        ChangeOpenClawCommand = new RelayCommand(() => ChangeFolder(OpenClawFolder, (s, path) => s with { OpenClawRoot = path }));
+        ResetOpenClawCommand = new RelayCommand(() => _settings.Update(s => s with { OpenClawRoot = null }),
+            () => _settings.Current.OpenClawRoot is not null);
+        ChangeHermesCommand = new RelayCommand(() => ChangeFolder(HermesPath, (s, path) => s with { HermesRoot = path }));
+        ResetHermesCommand = new RelayCommand(() => _settings.Update(s => s with { HermesRoot = null }),
+            () => _settings.Current.HermesRoot is not null);
+        ChangeDroidCommand = new RelayCommand(() => ChangeFolder(DroidPath, (s, path) => s with { DroidRoot = path }));
+        ResetDroidCommand = new RelayCommand(() => _settings.Update(s => s with { DroidRoot = null }),
+            () => _settings.Current.DroidRoot is not null);
+        ResetTaskbarPositionCommand = new RelayCommand(() => _settings.Update(s => s with { TaskbarOffset = 0 }),
+            () => _settings.Current.TaskbarOffset > 0);
         OpenHistoryCommand = new RelayCommand(openHistory);
         ClearHistoryCommand = new RelayCommand(() =>
         {
@@ -249,6 +262,11 @@ internal sealed class SettingsViewModel : ObservableObject
                     Orbs.DarkTheme = value;
                 }
 
+                if (Boards is not null)
+                {
+                    Boards.DarkTheme = value;
+                }
+
                 if (TitleThemes is not null)
                 {
                     TitleThemes.DarkTheme = value;
@@ -324,6 +342,22 @@ internal sealed class SettingsViewModel : ObservableObject
     public RelayCommand ChangeGrokBuildCommand { get; }
 
     public RelayCommand ResetGrokBuildCommand { get; }
+
+    public RelayCommand ChangePiCommand { get; }
+
+    public RelayCommand ResetPiCommand { get; }
+
+    public RelayCommand ChangeOpenClawCommand { get; }
+
+    public RelayCommand ResetOpenClawCommand { get; }
+
+    public RelayCommand ChangeHermesCommand { get; }
+
+    public RelayCommand ResetHermesCommand { get; }
+
+    public RelayCommand ChangeDroidCommand { get; }
+
+    public RelayCommand ResetDroidCommand { get; }
 
     public RelayCommand OpenHistoryCommand { get; }
 
@@ -479,6 +513,19 @@ internal sealed class SettingsViewModel : ObservableObject
         set => Apply(s => s with { BarCodexQuota = value });
     }
 
+    /// <summary><c>settings.bar.intelligence</c>: the 智力 block after the network block (DESIGN 10).</summary>
+    public bool BarIntelligence
+    {
+        get => S.BarIntelligence;
+        set => Apply(s => s with { BarIntelligence = value });
+    }
+
+    /// <summary>The switch's caption while it is on: <c>settings.bar.intelligence.hint</c>; none while off.</summary>
+    public string BarIntelligenceHint => S.BarIntelligence ? _loc["settings.bar.intelligence.hint"] : string.Empty;
+
+    /// <summary>Back to the default spot next to the notification area (DESIGN 3, Position on the taskbar); disabled while there.</summary>
+    public RelayCommand ResetTaskbarPositionCommand { get; }
+
     public string TaskbarStatus => _taskbarPresence switch
     {
         TaskbarPresence.Floating => _loc["win.settings.taskbar.floating"],
@@ -595,6 +642,38 @@ internal sealed class SettingsViewModel : ObservableObject
     public string GrokBuildPath => S.GrokBuildRoot ?? LiveMonitor.DefaultGrokBuildRoot;
 
     public string GrokBuildStatus => StatusFor(SourceKind.GrokBuild);
+
+    /// <summary>Pi's default sessions root (its custom session folder is read too), or the one chosen folder.</summary>
+    public string PiPath => S.PiRoot ?? LiveMonitor.DefaultPiRoot;
+
+    /// <summary>Main session files of every Pi root with a line today; sub-agent files are not sessions (DESIGN 5).</summary>
+    public string PiStatus => StatusFor(SourceKind.Pi);
+
+    /// <summary>The chosen OpenClaw folder or database, else the state folders found (<c>~/.openclaw</c> first), one per line.</summary>
+    public string OpenClawPath => S.OpenClawRoot
+        ?? (LiveMonitor.DefaultOpenClawRoots.Where(Directory.Exists).ToList() is { Count: > 0 } found
+            ? string.Join(Environment.NewLine, found)
+            : LiveMonitor.DefaultOpenClawRoot);
+
+    /// <summary>Transcript windows of every agent database with an entry today that are not sub-agents (DESIGN 5).</summary>
+    public string OpenClawStatus => StatusFor(SourceKind.OpenClaw);
+
+    // The picker starts in the chosen folder (a chosen database: its agent folder), else the default state folder.
+    private string OpenClawFolder => S.OpenClawRoot is { } chosen && File.Exists(chosen)
+        ? Path.GetDirectoryName(chosen) ?? chosen
+        : S.OpenClawRoot ?? LiveMonitor.DefaultOpenClawRoot;
+
+    /// <summary>The Hermes home (<c>%LOCALAPPDATA%\hermes</c> unless <c>%HERMES_HOME%</c> says otherwise), or the chosen home or <c>logs</c> folder.</summary>
+    public string HermesPath => S.HermesRoot ?? LiveMonitor.DefaultHermesRoot;
+
+    /// <summary>Today's main sessions of every profile; a home without logs shows 0 (DESIGN 5).</summary>
+    public string HermesStatus => StatusFor(SourceKind.Hermes);
+
+    /// <summary>The Factory Droid sessions folder: the default, or the chosen folder's <c>sessions</c> folder (or the folder itself).</summary>
+    public string DroidPath => LiveMonitor.DroidRoot(S.DroidRoot);
+
+    /// <summary>Today's main sessions; Task-tool workers are not counted (DESIGN 5).</summary>
+    public string DroidStatus => StatusFor(SourceKind.Droid);
 
     public string CodexStatus => StatusFor(SourceKind.Codex);
 
@@ -717,6 +796,7 @@ internal sealed class SettingsViewModel : ObservableObject
 
         RefreshTitleLadder();
         Orbs?.Relocalize(localizer);
+        Boards?.Relocalize(localizer);
         TitleThemes?.Relocalize(localizer);
         Cost.Relocalize();
         Traffic?.Relocalize(localizer);
@@ -754,6 +834,12 @@ internal sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(ZCodeStatus));
         OnPropertyChanged(nameof(KimiStatus));
         OnPropertyChanged(nameof(GrokBuildStatus));
+        OnPropertyChanged(nameof(PiStatus));
+        OnPropertyChanged(nameof(OpenClawStatus));
+        OnPropertyChanged(nameof(OpenClawPath));
+        OnPropertyChanged(nameof(HermesStatus));
+        OnPropertyChanged(nameof(DroidStatus));
+        OnPropertyChanged(nameof(DroidPath));
         OnPropertyChanged(nameof(UpdateLastCheckedText));
     }
 
@@ -793,8 +879,7 @@ internal sealed class SettingsViewModel : ObservableObject
             return _loc["source.disabled"];
         }
 
-        var text = status.Available ? _loc.Format("source.sessions", status.SessionCount) : _loc["source.folderMissing"];
-        return status.ConfiguredModes.IsEmpty ? text : text + Environment.NewLine + ExecutionModeText.Detail(status.ConfiguredModes, _loc);
+        return status.Available ? _loc.Format("source.sessions", status.SessionCount) : _loc["source.folderMissing"];
     }
 
     private void Apply(Func<AppSettings, AppSettings> change)
@@ -819,6 +904,9 @@ internal sealed class SettingsViewModel : ObservableObject
 
             RefreshTitleLadder();
             OnPropertyChanged(string.Empty);
+
+            // Some changes come from outside this window (a drag of the taskbar widget), so ask the commands again.
+            System.Windows.Input.CommandManager.InvalidateRequerySuggested();
         }
         finally
         {
@@ -908,6 +996,9 @@ internal sealed class SettingsViewModel : ObservableObject
             TitleThemes?.Editor.OnLookChanged();
         }
     }
+
+    /// <summary>The leaderboard boards' list and editor under the orbs (DESIGN 2c); set by the app.</summary>
+    public BoardsPane.BoardsPaneViewModel? Boards { get; set; }
 
     /// <summary>The title themes (DESIGN 1); set by the app. Creates the General page's Title themes group.</summary>
     public TitleThemesService? TitleService

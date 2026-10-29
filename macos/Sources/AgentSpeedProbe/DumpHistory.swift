@@ -47,11 +47,19 @@ enum DumpHistory {
                 models.add(model.model, raw: tally.text)
             }
             line.add("models", raw: models.text)
+            line.add("unpriced", raw: JSONLine.array(day.unpriced.facts.map { fact in
+                var object = JSONLine()
+                object.add("model", fact.model)
+                object.add("provider", fact.provider)
+                object.add("fast", fact.fast)
+                object.add("requests", fact.requests)
+                return object.text
+            }))
             output += line.text + "\n"
         }
         FileHandle.standardOutput.write(Data(output.utf8))
         let summary = "history: \(report.days.count) rows, \(report.filesDiscovered) files discovered, "
-            + "\(report.filesAnalyzed) files (\(report.bytesAnalyzed) bytes) and \(report.sessionsAnalyzed) OpenCode sessions "
+            + "\(report.filesAnalyzed) files (\(report.bytesAnalyzed) bytes) and \(report.sessionsAnalyzed) database sessions "
             + "analysed in \(Int(report.durationMs.rounded())) ms\n"
         FileHandle.standardError.write(Data(summary.utf8))
     }
